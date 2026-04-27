@@ -1,0 +1,160 @@
+:root{
+  --bg:#070a12;
+  --fg:#e9eefc;
+  --muted:#a8b3d6;
+  --panel:#0b1020cc;
+  --panelSolid:#0b1020;
+  --accent:#7cf6ff;
+  --accent2:#c6ff8a;
+  --danger:#ff6b6b;
+  --border:#253056;
+  --shadow:0 10px 28px rgba(0,0,0,.45);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+html,body{height:100%;}
+body{
+  margin:0;
+  background: radial-gradient(1200px 800px at 20% 15%, #0f1631 0%, var(--bg) 55%, #05060a 100%);
+  color:var(--fg);
+  font-family:var(--sans);
+  overflow:hidden;
+}
+
+.skip-link{
+  position:absolute;
+  left:-9999px;
+  top:0;
+  background:#fff;
+  color:#000;
+  padding:10px 12px;
+  z-index:1000;
+}
+.skip-link:focus{left:12px; top:12px;}
+
+.topbar{
+  position:fixed;
+  top:0; left:0; right:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:10px 12px;
+  background: linear-gradient(180deg, rgba(10,12,22,.92), rgba(10,12,22,.6));
+  border-bottom:1px solid rgba(37,48,86,.7);
+  z-index:50;
+  backdrop-filter: blur(8px);
+}
+
+.brand{display:flex; align-items:baseline; gap:10px; min-width: 260px;}
+.brand__dot{width:10px; height:10px; border-radius:999px; background:var(--accent); box-shadow: 0 0 18px rgba(124,246,255,.75);} 
+.brand__title{font-weight:700; letter-spacing:.2px;}
+.brand__subtitle{color:var(--muted); font-size:12px;}
+
+.btn{
+  appearance:none;
+  border:1px solid rgba(37,48,86,.9);
+  background: rgba(11,16,32,.55);
+  color: var(--fg);
+  padding:8px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  text-decoration:none;
+  font-size:14px;
+}
+.btn:hover{border-color: rgba(124,246,255,.55);}
+.btn:focus{outline:2px solid rgba(124,246,255,.8); outline-offset:2px;}
+.btn--primary{background: rgba(124,246,255,.18); border-color: rgba(124,246,255,.75);} 
+
+.stage{position:absolute; inset:0;}
+#sky{position:absolute; inset:0; width:100%; height:100%;}
+
+.panel{
+  position:fixed;
+  top:56px;
+  right:12px;
+  width:min(420px, calc(100vw - 24px));
+  max-height: calc(100vh - 70px);
+  background: var(--panel);
+  border:1px solid rgba(37,48,86,.75);
+  border-radius:14px;
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  display:none;
+  z-index:60;
+}
+.panel[aria-hidden="false"]{display:block;}
+.panel__header{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  background: rgba(11,16,32,.75);
+  border-bottom:1px solid rgba(37,48,86,.75);
+}
+.panel__title{margin:0; font-size:18px;}
+.panel__hint{margin:6px 0 0; color: var(--muted); font-size:12px;}
+.panel__body{padding:12px; overflow:auto; max-height: calc(100vh - 140px);} 
+.panel__section{margin-top:14px; padding-top:12px; border-top:1px solid rgba(37,48,86,.55);} 
+.panel__section h3{margin:0 0 8px; font-size:14px; color: var(--accent);} 
+
+.status{
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.markList{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;}
+.markList li{border:1px solid rgba(37,48,86,.65); border-radius:12px; padding:10px; background: rgba(11,16,32,.35);} 
+.markList button{
+  width:100%;
+  text-align:left;
+  background:transparent;
+  border:none;
+  color: var(--fg);
+  cursor:pointer;
+  padding:0;
+}
+.markList .meta{margin-top:4px; color: var(--muted); font-size:12px; font-family: var(--mono);} 
+
+.small{margin:12px 0 0; color: var(--muted); font-size:12px;}
+
+.code{
+  background: rgba(0,0,0,.35);
+  border:1px solid rgba(37,48,86,.65);
+  padding:10px;
+  border-radius:12px;
+  overflow:auto;
+  font-family: var(--mono);
+  font-size:12px;
+}
+
+.tooltip{
+  position:fixed;
+  left:12px;
+  bottom:12px;
+  width:min(520px, calc(100vw - 24px));
+  background: rgba(11,16,32,.92);
+  border:1px solid rgba(37,48,86,.85);
+  border-radius:14px;
+  box-shadow: var(--shadow);
+  padding:12px;
+  z-index:65;
+  display:none;
+}
+.tooltip[aria-hidden="false"]{display:block;}
+.tooltip__header{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+.tooltip__title{font-weight:700;}
+.tooltip__meta{margin-top:3px; color: var(--muted); font-size:12px; font-family: var(--mono);} 
+.tooltip__body{margin-top:10px; color: var(--fg); font-size:14px; line-height:1.45; white-space:pre-wrap;}
+.tooltip__actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
+
+body.high-contrast{
+  --bg:#000;
+  --fg:#fff;
+  --muted:#d2d2d2;
+  --panel:#000000f0;
+  --accent:#00ffff;
+  --border:#888;
+}

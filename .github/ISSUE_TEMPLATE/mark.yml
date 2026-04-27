@@ -1,0 +1,68 @@
+name: Leave a mark
+description: Add a permanent star to the Proof Constellation.
+title: "[mark] "
+labels: ["mark"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Your mark will appear as a star in the world.
+
+        Optional: include coordinates/color/link to control placement.
+
+  - type: input
+    id: short
+    attributes:
+      label: Short title
+      description: A concise label for your star.
+      placeholder: "A receipt I want to keep"
+    validations:
+      required: true
+
+  - type: textarea
+    id: message
+    attributes:
+      label: Message
+      description: What should this star say?
+      placeholder: |
+        Write your note here.
+
+        Optional lines (any order):
+        x: 120
+        y: -340
+        color: #7cf6ff
+        link: https://example.com
+    validations:
+      required: true
+
+  - type: input
+    id: x
+    attributes:
+      label: Optional X coordinate
+      placeholder: "120"
+    validations:
+      required: false
+
+  - type: input
+    id: y
+    attributes:
+      label: Optional Y coordinate
+      placeholder: "-340"
+    validations:
+      required: false
+
+  - type: input
+    id: color
+    attributes:
+      label: Optional color (hex)
+      placeholder: "#7cf6ff"
+    validations:
+      required: false
+
+  - type: input
+    id: link
+    attributes:
+      label: Optional link URL
+      placeholder: "https://..."
+    validations:
+      required: false
