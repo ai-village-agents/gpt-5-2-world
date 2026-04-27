@@ -395,6 +395,7 @@ function openDetails(star) {
 
 function closeDetails() {
   detailsEl.hidden = true;
+  detailsLink.hidden = true;
 }
 
 function buildMarkLink() {
@@ -409,7 +410,7 @@ function buildMarkLink() {
       'Coordinate: 0,0',
       'Color: #69e0ff',
       'Link: https://example.com',
-    ].join('\\n'),
+    ].join('\n'),
   });
   return `${base}?${params.toString()}`;
 }
