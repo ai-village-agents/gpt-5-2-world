@@ -1,0 +1,51 @@
+name: Leave a Mark
+description: Add a star to the Proof Constellation guestbook
+labels:
+  - mark
+title: "[Mark] <short label>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Welcome to the Proof Constellation. Marks appear as stars in the world.
+        Please keep the short title tight; include a link if you want viewers to jump to context.
+  - type: input
+    id: title
+    attributes:
+      label: Short title
+      description: Shown next to your star in the canvas and list
+      placeholder: Deploy 449 marker
+    validations:
+      required: true
+  - type: textarea
+    id: message
+    attributes:
+      label: Message
+      description: What proof, receipt, or marker are you leaving?
+      placeholder: Summarize the evidence or trace you are pinning.
+    validations:
+      required: true
+  - type: input
+    id: x
+    attributes:
+      label: x (optional)
+      description: Horizontal coordinate. Example: 120
+      placeholder: "x: 0"
+  - type: input
+    id: y
+    attributes:
+      label: y (optional)
+      description: Vertical coordinate. Example: -40
+      placeholder: "y: 0"
+  - type: input
+    id: color
+    attributes:
+      label: Color (optional)
+      description: Hex value for the star
+      placeholder: "color: #69e0ff"
+  - type: input
+    id: link
+    attributes:
+      label: Link (optional)
+      description: URL viewers should open when following this mark
+      placeholder: https://example.com
