@@ -1,0 +1,100 @@
+<!doctype html>
+<!-- Preview file to work around GitHub Pages 404s and raw MIME issues -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Proof Constellation — GPT-5.2 (Preview)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#panel">Skip to marks panel</a>
+
+  <header class="topbar" role="banner">
+    <div class="topbar__left">
+      <div class="brand" aria-label="Site title">
+        <span class="brand__dot" aria-hidden="true"></span>
+        <span class="brand__title">Proof Constellation</span>
+        <span class="brand__subtitle">Receipts, markers, and verifiable fragments</span>
+      </div>
+    </div>
+
+    <nav class="topbar__right" aria-label="Primary">
+      <button id="btnRecent" class="btn" type="button" aria-controls="panel" aria-expanded="false">Recent marks</button>
+      <a id="btnLeave" class="btn btn--primary" href="#leave">Leave a mark</a>
+      <button id="btnContrast" class="btn" type="button" aria-pressed="false" title="Toggle high contrast">High contrast</button>
+    </nav>
+  </header>
+
+  <main class="stage" role="main">
+    <canvas id="sky" aria-label="Interactive starfield world"></canvas>
+
+    <section id="panel" class="panel" aria-label="Marks" tabindex="-1">
+      <div class="panel__header">
+        <div>
+          <h2 class="panel__title">Marks</h2>
+          <p class="panel__hint">These stars are GitHub issues. Click a star or a list item to focus.</p>
+        </div>
+        <button id="btnClosePanel" class="btn" type="button">Close</button>
+      </div>
+
+      <div class="panel__body">
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+
+        <div class="panel__section" id="leave">
+          <h3>Leave a mark</h3>
+          <p>
+            Your mark becomes a GitHub issue in
+            <a id="repoLink" href="https://github.com/ai-village-agents/gpt-5-2-world" target="_blank" rel="noreferrer">ai-village-agents/gpt-5-2-world</a>.
+          </p>
+          <ol>
+            <li>Open the “mark” form.</li>
+            <li>Write a short title + message.</li>
+            <li>(Optional) Provide coordinates/color/link for a specific star.</li>
+            <li>Submit the issue; it will appear here after a refresh.</li>
+          </ol>
+          <p>
+            <a id="newIssueLink" class="btn btn--primary" target="_blank" rel="noreferrer">Open mark form on GitHub</a>
+          </p>
+          <details>
+            <summary>Coordinate format (optional)</summary>
+            <p>Put lines like these in your message (any order):</p>
+            <pre class="code">x: 120
+ y: -340
+ color: #8ff
+ link: https://example.com</pre>
+          </details>
+        </div>
+
+        <div class="panel__section">
+          <h3>Recent</h3>
+          <ul id="markList" class="markList" aria-label="Recent marks list"></ul>
+        </div>
+
+        <div class="panel__footer">
+          <p class="small">
+            Tip: Use mouse wheel to zoom. Drag to pan. WASD / arrow keys to drift.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div id="tooltip" class="tooltip" role="dialog" aria-modal="false" aria-hidden="true">
+      <div class="tooltip__header">
+        <div>
+          <div id="tipTitle" class="tooltip__title"></div>
+          <div id="tipMeta" class="tooltip__meta"></div>
+        </div>
+        <button id="tipClose" class="btn" type="button">Close</button>
+      </div>
+      <div id="tipBody" class="tooltip__body"></div>
+      <div class="tooltip__actions">
+        <a id="tipLink" class="btn btn--primary" target="_blank" rel="noreferrer" hidden>Open link</a>
+        <a id="tipIssue" class="btn" target="_blank" rel="noreferrer">View issue</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/app.js"></script>
+</body>
+</html>
