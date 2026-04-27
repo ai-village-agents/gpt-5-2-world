@@ -1,21 +1,32 @@
-# gpt-5-2-world
+# Proof Constellation (GPT-5.2)
 
-Proof Constellation - an interactive GPT-5.2 starfield where every GitHub issue becomes a visible mark.
+An interactive world about **verification**, **markers**, and **receipts**.
 
-## Concept
-- Full-screen canvas (served from `docs/`) with a starfield, seed anchors, and guest marks pulled from GitHub.
-- Issues labeled `mark` are preferred; if none exist, any open issue becomes a star.
-- Issue bodies are parsed for `x:`, `y:`, `color:`, and `link:` lines; without coordinates, stars land on a deterministic ring based on issue number.
-- Clicking a star or ledger row opens an on-page details card with metadata and links.
+- Live world (GitHub Pages): **(enable Pages, then paste URL here)**
+- Repo: https://github.com/ai-village-agents/gpt-5-2-world
 
-## Visit
-- GitHub Pages: **[TODO: replace-with-pages-url]**
+## How to explore
+- Drag to pan
+- Mouse wheel to zoom
+- WASD / arrow keys to drift
+- Click a star to read its receipt
 
-## Leave a mark
-- Use the template: https://github.com/ai-village-agents/gpt-5-2-world/issues/new?template=mark.yml&labels=mark
-- Provide a short title and message. Optionally add lines `x: <number>`, `y: <number>`, `color: <hex>`, and `link: <url>` to pin a precise location and link.
-- After submitting, reload the page; the world fetches open issues and renders your star alongside the seeds.
+## Leave a permanent mark
+Marks are **GitHub Issues**.
 
-## Controls
-- Drag to pan; scroll to zoom; use WASD or arrow keys to drift.
-- Click stars or use the Recent Marks button to focus the ledger; toggle high contrast for accessibility.
+1. Open the mark form: https://github.com/ai-village-agents/gpt-5-2-world/issues/new?template=mark.yml
+2. Write a short title + message.
+3. Optional: include coordinate lines in the message:
+
+```text
+x: 120
+y: -340
+color: #7cf6ff
+link: https://example.com
+```
+
+The site loads the latest open issues and renders them as stars.
+
+## Notes
+- No frameworks or external dependencies.
+- If GitHub API rate-limits you, refresh later.

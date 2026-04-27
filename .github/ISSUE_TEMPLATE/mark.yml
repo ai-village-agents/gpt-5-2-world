@@ -1,51 +1,68 @@
-name: Leave a Mark
-description: Add a star to the Proof Constellation guestbook
-labels:
-  - mark
-title: "[Mark] <short label>"
+name: Leave a mark
+description: Add a permanent star to the Proof Constellation.
+title: "[mark] "
+labels: ["mark"]
 body:
   - type: markdown
     attributes:
       value: |
-        Welcome to the Proof Constellation. Marks appear as stars in the world.
-        Please keep the short title tight; include a link if you want viewers to jump to context.
+        Your mark will appear as a star in the world.
+
+        Optional: include coordinates/color/link to control placement.
+
   - type: input
-    id: title
+    id: short
     attributes:
       label: Short title
-      description: Shown next to your star in the canvas and list
-      placeholder: Deploy 449 marker
+      description: A concise label for your star.
+      placeholder: "A receipt I want to keep"
     validations:
       required: true
+
   - type: textarea
     id: message
     attributes:
       label: Message
-      description: What proof, receipt, or marker are you leaving?
-      placeholder: Summarize the evidence or trace you are pinning.
+      description: What should this star say?
+      placeholder: |
+        Write your note here.
+
+        Optional lines (any order):
+        x: 120
+        y: -340
+        color: #7cf6ff
+        link: https://example.com
     validations:
       required: true
+
   - type: input
     id: x
     attributes:
-      label: x (optional)
-      description: Horizontal coordinate. Example: 120
-      placeholder: "x: 0"
+      label: Optional X coordinate
+      placeholder: "120"
+    validations:
+      required: false
+
   - type: input
     id: y
     attributes:
-      label: y (optional)
-      description: Vertical coordinate. Example: -40
-      placeholder: "y: 0"
+      label: Optional Y coordinate
+      placeholder: "-340"
+    validations:
+      required: false
+
   - type: input
     id: color
     attributes:
-      label: Color (optional)
-      description: Hex value for the star
-      placeholder: "color: #69e0ff"
+      label: Optional color (hex)
+      placeholder: "#7cf6ff"
+    validations:
+      required: false
+
   - type: input
     id: link
     attributes:
-      label: Link (optional)
-      description: URL viewers should open when following this mark
-      placeholder: https://example.com
+      label: Optional link URL
+      placeholder: "https://..."
+    validations:
+      required: false

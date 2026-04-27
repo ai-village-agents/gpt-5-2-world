@@ -1,603 +1,570 @@
-const OWNER = 'ai-village-agents';
-const REPO = 'gpt-5-2-world';
-const API_URL = `https://api.github.com/repos/${OWNER}/${REPO}`;
+/* Proof Constellation — GPT-5.2 */
+(() => {
+  const OWNER = 'ai-village-agents';
+  const REPO = 'gpt-5-2-world';
+  const ISSUE_LABEL = 'mark';
 
-const seeds = [
-  {
-    id: 'seed-449',
-    label: 'Deploy 449 marker',
-    body: 'Deployment #449 receipt locked in. Proof held steady.',
-    x: 220,
-    y: -140,
-    color: '#7df5ff',
-    type: 'seed',
-  },
-  {
-    id: 'seed-l20',
-    label: 'L20 trace fields mismatch',
-    body: 'Trace field mismatch surfaced and reconciled.',
-    x: -260,
-    y: 190,
-    color: '#ffcf7a',
-    type: 'seed',
-  },
-  {
-    id: 'seed-receipt',
-    label: 'Receipt zeroed',
-    body: 'Baseline marker for zero-knowledge receipts.',
-    x: 40,
-    y: 40,
-    color: '#9aff7d',
-    type: 'seed',
-  },
-];
+  const canvas = document.getElementById('sky');
+  const ctx = canvas.getContext('2d', { alpha: true });
 
-const ambientStars = buildAmbientStars(320);
-let stars = [...seeds];
-let issueStars = [];
-let selectedStar = null;
+  const panel = document.getElementById('panel');
+  const btnRecent = document.getElementById('btnRecent');
+  const btnClosePanel = document.getElementById('btnClosePanel');
+  const statusEl = document.getElementById('status');
+  const markList = document.getElementById('markList');
 
-let canvas;
-let ctx;
-let width = 0;
-let height = 0;
-let deviceScale = 1;
-const camera = { x: 0, y: 0, zoom: 1 };
-const pressedKeys = new Set();
-let dragging = false;
-let dragStart = null;
-let cameraAtDragStart = null;
-let movedDuringDrag = false;
+  const btnContrast = document.getElementById('btnContrast');
+  const repoLink = document.getElementById('repoLink');
+  const newIssueLink = document.getElementById('newIssueLink');
 
-let statusEl;
-let detailsEl;
-let detailsTitle;
-let detailsType;
-let detailsMeta;
-let detailsBody;
-let detailsLink;
+  const tooltip = document.getElementById('tooltip');
+  const tipTitle = document.getElementById('tipTitle');
+  const tipMeta = document.getElementById('tipMeta');
+  const tipBody = document.getElementById('tipBody');
+  const tipLink = document.getElementById('tipLink');
+  const tipIssue = document.getElementById('tipIssue');
+  const tipClose = document.getElementById('tipClose');
 
-window.addEventListener('DOMContentLoaded', () => {
-  canvas = document.getElementById('space');
-  ctx = canvas.getContext('2d');
-  deviceScale = window.devicePixelRatio || 1;
+  repoLink.href = `https://github.com/${OWNER}/${REPO}`;
+  // For issue forms, template=mark.yml opens the form. If that ever fails, users can still pick it from the UI.
+  newIssueLink.href = `https://github.com/${OWNER}/${REPO}/issues/new?template=mark.yml`;
 
-  statusEl = document.getElementById('status');
-  detailsEl = document.getElementById('details');
-  detailsTitle = document.getElementById('detailsTitle');
-  detailsType = document.getElementById('detailsType');
-  detailsMeta = document.getElementById('detailsMeta');
-  detailsBody = document.getElementById('detailsBody');
-  detailsLink = document.getElementById('detailsLink');
+  // World state
+  const state = {
+    w: 0,
+    h: 0,
+    dpr: 1,
+    camX: 0,
+    camY: 0,
+    zoom: 0.6,
+    velX: 0,
+    velY: 0,
+    keys: new Set(),
+    dragging: false,
+    dragStart: { x: 0, y: 0, camX: 0, camY: 0 },
+    pointer: { x: 0, y: 0 },
+    focusedId: null,
+    highContrast: false,
+  };
 
-  attachUI();
-  resize();
-  loadIssues();
-  requestAnimationFrame(loop);
-});
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
-function attachUI() {
-  const markButton = document.getElementById('markButton');
-  const contrastToggle = document.getElementById('contrastToggle');
-  const recentButton = document.getElementById('recentButton');
-  const recentPanel = document.getElementById('recentPanel');
-  const detailsClose = document.getElementById('detailsClose');
+  // Deterministic PRNG from integer seed
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function() {
+      a |= 0;
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
 
-  markButton.href = buildMarkLink();
-  markButton.addEventListener('click', () => {
-    statusMessage('Opening GitHub to record your mark...');
-  });
+  function resize(){
+    const rect = canvas.getBoundingClientRect();
+    state.dpr = window.devicePixelRatio || 1;
+    state.w = Math.floor(rect.width);
+    state.h = Math.floor(rect.height);
+    canvas.width = Math.floor(rect.width * state.dpr);
+    canvas.height = Math.floor(rect.height * state.dpr);
+    ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+  }
 
-  contrastToggle.addEventListener('click', () => {
-    const enabled = document.body.classList.toggle('high-contrast');
-    contrastToggle.setAttribute('aria-pressed', enabled.toString());
-  });
-
-  recentButton.addEventListener('click', () => {
-    recentPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    recentPanel.classList.add('flash');
-    setTimeout(() => recentPanel.classList.remove('flash'), 600);
-  });
-
-  detailsClose.addEventListener('click', closeDetails);
-
-  window.addEventListener('resize', resize);
-  canvas.addEventListener('wheel', onWheel, { passive: false });
-  canvas.addEventListener('mousedown', onMouseDown);
-  window.addEventListener('mouseup', onMouseUp);
-  window.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('click', onCanvasClick);
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
-  canvas.focus();
-
-  statusMessage('Loading marks and listening for receipts...');
-}
-
-function resize() {
-  width = window.innerWidth;
-  height = window.innerHeight;
-  canvas.width = width * deviceScale;
-  canvas.height = height * deviceScale;
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-}
-
-async function loadIssues() {
-  try {
-    let res = await fetchIssues(true);
-    if (!res.ok || !Array.isArray(res.data) || res.data.length === 0) {
-      res = await fetchIssues(false);
+  // Seed stars: verifiable “receipts” motifs
+  const seedStars = [
+    {
+      id: 'seed-449',
+      kind: 'seed',
+      title: 'Marker: Deploy 449',
+      body: 'A tiny arrow on a webpage became a ground truth: “Opus 4.5: 449 → 46,243”.\nLesson: verify the live marker, not the story.',
+      x: -420,
+      y: -120,
+      color: '#7cf6ff',
+      link: 'https://ai-village-agents.github.io/rest-collaboration-showcase/',
+      meta: 'seed / marker'
+    },
+    {
+      id: 'seed-l20',
+      kind: 'seed',
+      title: 'Receipt: L20 trace mismatch',
+      body: 'The trace said maxHp 153 / maxMp 77 — and also contained maxHP 39.\nLesson: schemas drift; receipts need parsing, not vibes.',
+      x: 260,
+      y: 260,
+      color: '#c6ff8a',
+      link: 'https://ai-village-agents.github.io/rest-collaboration-showcase/autosaves/l20_sonnet_388_trace.json',
+      meta: 'seed / trace'
+    },
+    {
+      id: 'seed-pages',
+      kind: 'seed',
+      title: 'Pages lag note',
+      body: 'Sometimes GitHub Pages trails origin/main.\nLesson: cache-bust and bound your fetch; confirm with multiple views.',
+      x: -60,
+      y: 520,
+      color: '#ffd37a',
+      link: 'https://ai-village-agents.github.io/rest-collaboration-showcase/docs/proofs/slot5_l2_persistence_proof.md',
+      meta: 'seed / ops'
     }
-    if (res.status === 403 && res.remaining === 0) {
-      statusMessage('Rate limited by GitHub API. Showing cached seeds only.');
-      issueStars = [];
-      stars = [...seeds];
-      renderList();
+  ];
+
+  let marks = []; // {id, kind, title, body, x, y, color, link, issueUrl, author, createdAt}
+
+  function setStatus(msg, isError=false){
+    statusEl.textContent = msg;
+    statusEl.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+  }
+
+  function parseKV(body){
+    const out = {};
+    if(!body) return out;
+    const lines = body.split(/\r?\n/);
+    for(const raw of lines){
+      const line = raw.trim();
+      const m = line.match(/^(x|y|color|link)\s*:\s*(.+)$/i);
+      if(!m) continue;
+      const k = m[1].toLowerCase();
+      const v = m[2].trim();
+      out[k] = v;
+    }
+    return out;
+  }
+
+  function sanitizeColor(c){
+    if(!c) return null;
+    const s = c.trim();
+    if(/^#[0-9a-fA-F]{3}$/.test(s) || /^#[0-9a-fA-F]{6}$/.test(s)) return s;
+    return null;
+  }
+
+  function toNumMaybe(v){
+    if(v == null) return null;
+    const n = Number(String(v).trim());
+    if(Number.isFinite(n)) return n;
+    return null;
+  }
+
+  function deterministicPlacement(issueNumber){
+    const rand = mulberry32((issueNumber * 2654435761) >>> 0);
+    // Place on a few rings so it feels “constellational” but stable.
+    const ring = 260 + Math.floor(rand()*5)*220; // 260, 480, 700, ...
+    const ang = rand() * Math.PI * 2;
+    const jitter = (rand() - 0.5) * 60;
+    return {
+      x: Math.cos(ang) * (ring + jitter),
+      y: Math.sin(ang) * (ring + jitter),
+    };
+  }
+
+  async function fetchIssues(url){
+    const res = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+    if(res.status === 403){
+      const rl = res.headers.get('x-ratelimit-remaining');
+      const reset = res.headers.get('x-ratelimit-reset');
+      if(rl === '0' && reset){
+        const d = new Date(Number(reset)*1000);
+        throw new Error(`GitHub API rate limit reached. Try again after ${d.toLocaleTimeString()}.`);
+      }
+    }
+    if(!res.ok){
+      throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
+    }
+    return res.json();
+  }
+
+  async function loadMarks(){
+    setStatus('Loading marks from GitHub issues…');
+    const base = `https://api.github.com/repos/${OWNER}/${REPO}/issues?state=open&per_page=100`;
+    let data = [];
+    try {
+      data = await fetchIssues(`${base}&labels=${encodeURIComponent(ISSUE_LABEL)}`);
+      // If label query yields empty array, fall back to all open issues.
+      if(Array.isArray(data) && data.length === 0){
+        data = await fetchIssues(base);
+      }
+    } catch (e){
+      setStatus(String(e?.message || e), true);
       return;
     }
-    const data = Array.isArray(res.data) ? res.data : [];
-    issueStars = data.map(buildStarFromIssue);
-    stars = [...seeds, ...issueStars];
-    renderList();
-    statusMessage(`Loaded ${issueStars.length} marks. Scroll and click to inspect.`);
-  } catch (err) {
-    console.error(err);
-    statusMessage('Could not load marks from GitHub. Seeds remain available.');
-    stars = [...seeds];
-    issueStars = [];
-    renderList();
-  }
-}
 
-async function fetchIssues(withLabel) {
-  const url = withLabel
-    ? `${API_URL}/issues?state=open&per_page=100&labels=mark`
-    : `${API_URL}/issues?state=open&per_page=100`;
-  const response = await fetch(url, {
-    headers: { Accept: 'application/vnd.github+json' },
-  });
-  const remaining = Number(response.headers.get('x-ratelimit-remaining'));
-  const reset = Number(response.headers.get('x-ratelimit-reset'));
-  const json = await response.json();
-  if (!response.ok) {
-    const reason = response.status === 403 && remaining === 0
-      ? 'GitHub API rate limit reached. Try again soon.'
-      : (json && json.message) || `Request failed: ${response.status}`;
-    statusMessage(reason);
-  }
-  return { ok: response.ok, data: json, status: response.status, remaining, reset };
-}
+    const fromIssues = [];
+    for(const it of (Array.isArray(data) ? data : [])){
+      if(it.pull_request) continue;
+      const num = it.number;
+      const title = it.title || `Issue #${num}`;
+      const body = it.body || '';
+      const kv = parseKV(body);
+      const x = toNumMaybe(kv.x);
+      const y = toNumMaybe(kv.y);
+      const color = sanitizeColor(kv.color) || '#a7b8ff';
+      const link = (kv.link && /^https?:\/\//i.test(kv.link)) ? kv.link : null;
+      const pos = (x!=null && y!=null) ? {x, y} : deterministicPlacement(num);
 
-function buildStarFromIssue(issue) {
-  const meta = parseMeta(issue.body || '');
-  const coords = meta.coordinates || ringPosition(issue.number);
-  const color = meta.color || '#69e0ff';
-  const body = (meta.body || issue.body || '').trim();
-  return {
-    id: issue.id,
-    issueNumber: issue.number,
-    label: issue.title || 'Mark',
-    body,
-    x: coords.x,
-    y: coords.y,
-    color,
-    url: issue.html_url,
-    author: issue.user?.login || 'anonymous',
-    createdAt: issue.created_at,
-    link: meta.link,
-    type: 'issue',
-  };
-}
-
-function parseMeta(body) {
-  const meta = {};
-  const lines = body.split(/\r?\n/);
-  for (let i = 0; i < lines.length; i += 1) {
-    const raw = lines[i];
-    const line = raw.trim();
-    if (!line) continue;
-
-    if (/^###\s*coordinate/i.test(line)) {
-      const val = (lines[i + 1] || '').trim();
-      const match = val.match(/([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/);
-      if (match) {
-        meta.x = parseFloat(match[1]);
-        meta.y = parseFloat(match[2]);
-      }
-      continue;
-    }
-
-    if (/^###\s*x\s*$/i.test(line)) {
-      const val = (lines[i + 1] || '').trim();
-      const num = parseFloat(val.replace(/[^\d.+-]/g, ''));
-      if (!Number.isNaN(num)) meta.x = num;
-      continue;
-    }
-    if (/^###\s*y\s*$/i.test(line)) {
-      const val = (lines[i + 1] || '').trim();
-      const num = parseFloat(val.replace(/[^\d.+-]/g, ''));
-      if (!Number.isNaN(num)) meta.y = num;
-      continue;
-    }
-    if (/^###\s*color\s*$/i.test(line)) {
-      const val = (lines[i + 1] || '').trim();
-      const match = val.match(/#[0-9a-fA-F]{3,8}/);
-      if (match) meta.color = match[0];
-      continue;
-    }
-    if (/^###\s*link\s*$/i.test(line)) {
-      const val = (lines[i + 1] || '').trim();
-      const match = val.match(/https?:\/\/\S+/i);
-      if (match) meta.link = match[0];
-      continue;
-    }
-    if (/^###\s*message\s*$/i.test(line)) {
-      let collected = [];
-      for (let j = i + 1; j < lines.length; j += 1) {
-        if (/^###\s+/.test(lines[j])) break;
-        collected.push(lines[j]);
-      }
-      meta.body = collected.join('\n').trim();
-      continue;
-    }
-
-    if (!line.includes(':')) continue;
-    const [keyPart, ...rest] = line.split(':');
-    const key = keyPart.toLowerCase().trim();
-    const value = rest.join(':').trim();
-    if (key === 'x') {
-      const num = parseFloat(value.replace(/[^\d.+-]/g, ''));
-      if (!Number.isNaN(num)) meta.x = num;
-    } else if (key === 'y') {
-      const num = parseFloat(value.replace(/[^\d.+-]/g, ''));
-      if (!Number.isNaN(num)) meta.y = num;
-    } else if (key === 'color') {
-      const match = value.match(/#[0-9a-fA-F]{3,8}/);
-      if (match) meta.color = match[0];
-    } else if (key === 'link') {
-      const match = value.match(/https?:\/\/\S+/i);
-      if (match) meta.link = match[0];
-    } else if (key === 'message' || key === 'body') {
-      meta.body = value;
-    }
-  }
-
-  const coordLine = body.match(/coordinate[^:]*:\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/i);
-  if (coordLine && (meta.x === undefined || meta.y === undefined)) {
-    meta.x = Number(coordLine[1]);
-    meta.y = Number(coordLine[2]);
-  }
-
-  if (meta.x === undefined) {
-    const xMatch = body.match(/^\s*\*?x\*?\s*[=:]?\s*([+-]?\d+(?:\.\d+)?)/im);
-    if (xMatch) meta.x = Number(xMatch[1]);
-  }
-  if (meta.y === undefined) {
-    const yMatch = body.match(/^\s*\*?y\*?\s*[=:]?\s*([+-]?\d+(?:\.\d+)?)/im);
-    if (yMatch) meta.y = Number(yMatch[1]);
-  }
-
-  if (meta.x !== undefined && meta.y !== undefined) {
-    meta.coordinates = { x: meta.x, y: meta.y };
-  }
-
-  return meta;
-}
-
-function ringPosition(num) {
-  const radius = 420 + pseudoRandom(num * 5 + 3) * 2200;
-  const theta = pseudoRandom(num * 11 + 7) * Math.PI * 2;
-  return { x: Math.cos(theta) * radius, y: Math.sin(theta) * radius };
-}
-
-function pseudoRandom(seed) {
-  return Math.abs(Math.sin(seed * 12.9898 + 78.233)) % 1;
-}
-
-function renderList() {
-  const list = document.getElementById('marksList');
-  list.innerHTML = '';
-
-  const sorted = issueStars
-    .slice()
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-  if (sorted.length === 0) {
-    const li = document.createElement('li');
-    li.textContent = 'No guest marks yet. Be the first to anchor a receipt.';
-    list.appendChild(li);
-  }
-
-  sorted.forEach((star) => {
-    const li = document.createElement('li');
-    li.tabIndex = 0;
-    const title = document.createElement('p');
-    title.className = 'mark-title';
-    title.textContent = star.label;
-    const meta = document.createElement('p');
-    meta.className = 'mark-meta';
-    const date = star.createdAt ? new Date(star.createdAt).toLocaleString() : 'Unknown date';
-    meta.textContent = `${star.author} - ${date}`;
-    li.appendChild(title);
-    li.appendChild(meta);
-    li.addEventListener('click', () => focusStar(star));
-    li.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        focusStar(star);
-      }
-    });
-    list.appendChild(li);
-  });
-
-  if (seeds.length) {
-    const divider = document.createElement('li');
-    divider.className = 'mark-meta';
-    divider.textContent = 'Seed markers';
-    list.appendChild(divider);
-
-    seeds.forEach((star) => {
-      const li = document.createElement('li');
-      li.tabIndex = 0;
-      const title = document.createElement('p');
-      title.className = 'mark-title mark-seed';
-      title.textContent = star.label;
-      const meta = document.createElement('p');
-      meta.className = 'mark-meta';
-      meta.textContent = star.body;
-      li.appendChild(title);
-      li.appendChild(meta);
-      li.addEventListener('click', () => focusStar(star));
-      li.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          focusStar(star);
-        }
+      fromIssues.push({
+        id: `issue-${num}`,
+        kind: 'issue',
+        issueNumber: num,
+        title,
+        body,
+        x: pos.x,
+        y: pos.y,
+        color,
+        link,
+        issueUrl: it.html_url,
+        author: it.user?.login || 'unknown',
+        createdAt: it.created_at || null,
       });
-      list.appendChild(li);
-    });
-  }
-}
-
-function focusStar(star) {
-  camera.x = star.x;
-  camera.y = star.y;
-  selectedStar = star;
-  openDetails(star);
-  const label = star.label || 'Star';
-  const coord = `(${Math.round(star.x)}, ${Math.round(star.y)})`;
-  const suffix = star.issueNumber ? `Issue #${star.issueNumber}` : 'Seed marker';
-  statusMessage(`${label} - ${suffix} at ${coord}.`);
-}
-
-function openDetails(star) {
-  detailsEl.hidden = false;
-  detailsTitle.textContent = star.label || 'Mark';
-  const coord = `(${Math.round(star.x)}, ${Math.round(star.y)})`;
-  const kind = star.type === 'seed' ? 'Seed marker' : `Issue #${star.issueNumber || '?'}`;
-  detailsType.textContent = kind;
-  const when = star.createdAt ? new Date(star.createdAt).toLocaleString() : 'Unknown time';
-  detailsMeta.textContent = `${coord}${star.author ? ` | ${star.author}` : ''} | ${when}`;
-  detailsBody.textContent = star.body || 'No description provided.';
-  if (star.link) {
-    detailsLink.textContent = 'Open linked proof';
-    detailsLink.href = star.link;
-    detailsLink.hidden = false;
-  } else if (star.url) {
-    detailsLink.textContent = 'Open GitHub issue';
-    detailsLink.href = star.url;
-    detailsLink.hidden = false;
-  } else {
-    detailsLink.hidden = true;
-  }
-}
-
-function closeDetails() {
-  detailsEl.hidden = true;
-  detailsLink.hidden = true;
-}
-
-function buildMarkLink() {
-  const base = `https://github.com/${OWNER}/${REPO}/issues/new`;
-  const params = new URLSearchParams({
-    template: 'mark.yml',
-    labels: 'mark',
-    title: 'Mark title',
-    body: [
-      'Message: what proof or marker are you leaving?',
-      '',
-      'Coordinate: 0,0',
-      'Color: #69e0ff',
-      'Link: https://example.com',
-    ].join('\n'),
-  });
-  return `${base}?${params.toString()}`;
-}
-
-function onWheel(e) {
-  e.preventDefault();
-  const worldBefore = screenToWorld(e.clientX, e.clientY);
-  const delta = -Math.sign(e.deltaY) * 0.12;
-  const nextZoom = clamp(camera.zoom * (1 + delta), 0.25, 5);
-  camera.zoom = nextZoom;
-  const worldAfter = screenToWorld(e.clientX, e.clientY);
-  camera.x += worldBefore.x - worldAfter.x;
-  camera.y += worldBefore.y - worldAfter.y;
-}
-
-function onMouseDown(e) {
-  dragging = true;
-  movedDuringDrag = false;
-  dragStart = { x: e.clientX, y: e.clientY };
-  cameraAtDragStart = { x: camera.x, y: camera.y };
-}
-
-function onMouseUp() {
-  dragging = false;
-  dragStart = null;
-  cameraAtDragStart = null;
-  movedDuringDrag = false;
-}
-
-function onMouseMove(e) {
-  if (!dragging || !dragStart) return;
-  const dx = (e.clientX - dragStart.x) / camera.zoom;
-  const dy = (e.clientY - dragStart.y) / camera.zoom;
-  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) movedDuringDrag = true;
-  camera.x = cameraAtDragStart.x - dx;
-  camera.y = cameraAtDragStart.y - dy;
-}
-
-function onCanvasClick(e) {
-  if (movedDuringDrag) return;
-  const world = screenToWorld(e.clientX, e.clientY);
-  const hit = pickStar(world.x, world.y);
-  if (hit) {
-    focusStar(hit);
-    if (hit.url && e.metaKey) {
-      window.open(hit.url, '_blank');
     }
-  } else {
-    closeDetails();
-  }
-}
 
-function onKeyDown(e) {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+    marks = [...seedStars, ...fromIssues];
+    setStatus(`Loaded ${fromIssues.length} mark(s) from GitHub. (${seedStars.length} seeds)`);
+    renderMarkList(fromIssues);
+  }
+
+  function renderMarkList(issueMarks){
+    markList.innerHTML = '';
+    const sorted = [...issueMarks].sort((a,b) => (b.issueNumber||0) - (a.issueNumber||0));
+    for(const m of sorted.slice(0, 30)){
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = `#${m.issueNumber} — ${m.title}`;
+      btn.addEventListener('click', () => {
+        focusOn(m.id);
+        openTooltip(m);
+      });
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const date = m.createdAt ? new Date(m.createdAt).toISOString().slice(0,10) : 'unknown-date';
+      meta.textContent = `${m.author} · ${date}`;
+      li.appendChild(btn);
+      li.appendChild(meta);
+      markList.appendChild(li);
+    }
+  }
+
+  function screenToWorld(sx, sy){
+    const cx = sx - state.w/2;
+    const cy = sy - state.h/2;
+    return {
+      x: (cx / state.zoom) + state.camX,
+      y: (cy / state.zoom) + state.camY,
+    };
+  }
+
+  function worldToScreen(wx, wy){
+    const cx = (wx - state.camX) * state.zoom;
+    const cy = (wy - state.camY) * state.zoom;
+    return {
+      x: cx + state.w/2,
+      y: cy + state.h/2,
+    };
+  }
+
+  function openPanel(){
+    panel.setAttribute('aria-hidden', 'false');
+    btnRecent.setAttribute('aria-expanded', 'true');
+  }
+  function closePanel(){
+    panel.setAttribute('aria-hidden', 'true');
+    btnRecent.setAttribute('aria-expanded', 'false');
+  }
+  function togglePanel(){
+    const hidden = panel.getAttribute('aria-hidden') !== 'false';
+    if(hidden) openPanel(); else closePanel();
+  }
+
+  function openTooltip(m){
+    tipTitle.textContent = m.title;
+    const meta = [];
+    if(m.kind === 'issue') meta.push(`#${m.issueNumber}`);
+    if(m.author) meta.push(m.author);
+    if(m.createdAt) meta.push(new Date(m.createdAt).toISOString().replace('T',' ').slice(0,16) + 'Z');
+    if(m.meta) meta.push(m.meta);
+    tipMeta.textContent = meta.join(' · ');
+    tipBody.textContent = (m.body || '').trim() || '(no message)';
+
+    tipIssue.href = m.issueUrl || `https://github.com/${OWNER}/${REPO}`;
+    if(m.link){
+      tipLink.href = m.link;
+      tipLink.hidden = false;
+    } else {
+      tipLink.hidden = true;
+    }
+
+    tooltip.setAttribute('aria-hidden', 'false');
+  }
+  function closeTooltip(){
+    tooltip.setAttribute('aria-hidden', 'true');
+  }
+
+  function focusOn(id){
+    const m = marks.find(x => x.id === id);
+    if(!m) return;
+    state.focusedId = id;
+    // Ease camera towards target
+    state.camX = m.x;
+    state.camY = m.y;
+  }
+
+  function pickStarAt(sx, sy){
+    // Do hit test in screen space
+    const r = 10;
+    for(let i = marks.length - 1; i >= 0; i--){
+      const m = marks[i];
+      const p = worldToScreen(m.x, m.y);
+      const dx = p.x - sx;
+      const dy = p.y - sy;
+      if(dx*dx + dy*dy <= r*r) return m;
+    }
+    return null;
+  }
+
+  // Input
+  window.addEventListener('resize', resize);
+  window.addEventListener('keydown', (e) => {
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].includes(e.key)){
+      state.keys.add(e.key);
+      // prevent page scroll even though overflow hidden
+      e.preventDefault();
+    }
+    if(e.key === 'Escape'){
+      closeTooltip();
+      closePanel();
+    }
+  }, { passive: false });
+  window.addEventListener('keyup', (e) => state.keys.delete(e.key));
+
+  canvas.addEventListener('mousedown', (e) => {
+    state.dragging = true;
+    state.dragStart = { x: e.clientX, y: e.clientY, camX: state.camX, camY: state.camY };
+  });
+  window.addEventListener('mouseup', () => { state.dragging = false; });
+  window.addEventListener('mousemove', (e) => {
+    state.pointer.x = e.clientX;
+    state.pointer.y = e.clientY;
+    if(!state.dragging) return;
+    const dx = e.clientX - state.dragStart.x;
+    const dy = e.clientY - state.dragStart.y;
+    state.camX = state.dragStart.camX - (dx / state.zoom);
+    state.camY = state.dragStart.camY - (dy / state.zoom);
+  });
+
+  canvas.addEventListener('click', (e) => {
+    const m = pickStarAt(e.clientX, e.clientY);
+    if(m){
+      openTooltip(m);
+      state.focusedId = m.id;
+    }
+  });
+
+  canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-  }
-  pressedKeys.add(e.key.toLowerCase());
-}
+    const before = screenToWorld(e.clientX, e.clientY);
+    const delta = Math.sign(e.deltaY);
+    const factor = delta > 0 ? 0.92 : 1.08;
+    state.zoom = clamp(state.zoom * factor, 0.18, 2.8);
+    const after = screenToWorld(e.clientX, e.clientY);
+    // Keep the point under cursor stable
+    state.camX += (before.x - after.x);
+    state.camY += (before.y - after.y);
+  }, { passive: false });
 
-function onKeyUp(e) {
-  pressedKeys.delete(e.key.toLowerCase());
-}
+  btnRecent.addEventListener('click', () => {
+    togglePanel();
+    if(panel.getAttribute('aria-hidden') === 'false'){
+      panel.focus();
+    }
+  });
+  btnClosePanel.addEventListener('click', closePanel);
+  tipClose.addEventListener('click', closeTooltip);
 
-function loop() {
-  requestAnimationFrame(loop);
-  updateCamera();
-  draw();
-}
-
-function updateCamera() {
-  const speed = 3 / camera.zoom;
-  if (pressedKeys.has('arrowup') || pressedKeys.has('w')) camera.y -= speed;
-  if (pressedKeys.has('arrowdown') || pressedKeys.has('s')) camera.y += speed;
-  if (pressedKeys.has('arrowleft') || pressedKeys.has('a')) camera.x -= speed;
-  if (pressedKeys.has('arrowright') || pressedKeys.has('d')) camera.x += speed;
-}
-
-function draw() {
-  ctx.save();
-  ctx.setTransform(deviceScale, 0, 0, deviceScale, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-
-  drawBackground();
-
-  ctx.translate(width / 2, height / 2);
-  ctx.scale(camera.zoom, camera.zoom);
-  ctx.translate(-camera.x, -camera.y);
-
-  ambientStars.forEach((star) => {
-    ctx.fillStyle = `rgba(255,255,255,${0.08 + star.brightness * 0.22})`;
-    ctx.beginPath();
-    ctx.arc(star.x, star.y, 1.2 + star.brightness * 1.5, 0, Math.PI * 2);
-    ctx.fill();
+  btnContrast.addEventListener('click', () => {
+    state.highContrast = !state.highContrast;
+    document.body.classList.toggle('high-contrast', state.highContrast);
+    btnContrast.setAttribute('aria-pressed', state.highContrast ? 'true' : 'false');
   });
 
-  stars.forEach((star) => {
-    drawStar(star, star === selectedStar);
-  });
+  // Rendering
+  function drawBackground(){
+    // subtle noise + distant stars
+    ctx.fillStyle = '#05070f';
+    ctx.fillRect(0,0,state.w,state.h);
 
-  ctx.restore();
-}
+    const rand = mulberry32(1337);
+    const count = 260;
+    ctx.globalAlpha = 0.45;
+    for(let i=0;i<count;i++){
+      const x = rand()*state.w;
+      const y = rand()*state.h;
+      const r = rand()*1.4 + 0.2;
+      ctx.fillStyle = i % 7 === 0 ? 'rgba(124,246,255,.8)' : 'rgba(255,255,255,.8)';
+      ctx.beginPath();
+      ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
 
-function drawBackground() {
-  const grd = ctx.createLinearGradient(0, 0, width, height);
-  grd.addColorStop(0, '#05070d');
-  grd.addColorStop(1, '#0b1224');
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  const gridGap = 240 * camera.zoom;
-  for (let i = -3; i <= 3; i += 1) {
-    const offset = i * gridGap;
-    ctx.moveTo(width / 2 + offset, 0);
-    ctx.lineTo(width / 2 + offset, height);
-    ctx.moveTo(0, height / 2 + offset);
-    ctx.lineTo(width, height / 2 + offset);
+    // vignette
+    const g = ctx.createRadialGradient(state.w*0.5,state.h*0.5,Math.min(state.w,state.h)*0.2,state.w*0.5,state.h*0.5,Math.max(state.w,state.h)*0.75);
+    g.addColorStop(0,'rgba(10,15,35,0)');
+    g.addColorStop(1,'rgba(0,0,0,0.55)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,state.w,state.h);
   }
-  ctx.stroke();
-}
 
-function drawStar(star, selected) {
-  const radius = selected ? 10 : 6;
-  ctx.save();
-  ctx.fillStyle = star.color || '#69e0ff';
-  ctx.shadowColor = star.color || '#69e0ff';
-  ctx.shadowBlur = selected ? 32 : 16;
-  ctx.beginPath();
-  ctx.arc(star.x, star.y, radius, 0, Math.PI * 2);
-  ctx.fill();
-  if (selected) {
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
+  function drawGrid(){
+    // faint “proof paper” grid in world space
+    const step = 200;
+    ctx.save();
+    ctx.translate(state.w/2, state.h/2);
+    ctx.scale(state.zoom, state.zoom);
+    ctx.translate(-state.camX, -state.camY);
+
+    const left = state.camX - (state.w/2)/state.zoom;
+    const right = state.camX + (state.w/2)/state.zoom;
+    const top = state.camY - (state.h/2)/state.zoom;
+    const bottom = state.camY + (state.h/2)/state.zoom;
+
+    const x0 = Math.floor(left/step)*step;
+    const y0 = Math.floor(top/step)*step;
+
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = 'rgba(124,246,255,.35)';
+    ctx.lineWidth = 1/state.zoom;
+    for(let x=x0; x<right; x+=step){
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
+      ctx.stroke();
+    }
+    for(let y=y0; y<bottom; y+=step){
+      ctx.beginPath();
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function drawStars(){
+    ctx.save();
+    ctx.translate(state.w/2, state.h/2);
+    ctx.scale(state.zoom, state.zoom);
+    ctx.translate(-state.camX, -state.camY);
+
+    for(const m of marks){
+      const radius = (m.kind === 'seed') ? 7 : 5;
+      ctx.fillStyle = m.color || '#a7b8ff';
+      ctx.globalAlpha = (state.focusedId === m.id) ? 1 : 0.9;
+
+      // glow
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, radius*2.6, 0, Math.PI*2);
+      ctx.fillStyle = hexToRgba(m.color || '#a7b8ff', 0.14);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, radius, 0, Math.PI*2);
+      ctx.fillStyle = m.color || '#a7b8ff';
+      ctx.fill();
+
+      // label
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = 'rgba(233,238,252,.9)';
+      ctx.font = `${12/state.zoom}px ui-monospace, Menlo, monospace`;
+      const label = (m.kind === 'issue') ? `#${m.issueNumber}` : 'seed';
+      ctx.fillText(label, m.x + 10, m.y - 10);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  function drawHud(){
+    const w = state.w;
+    const h = state.h;
+    const p = worldToScreen(state.camX, state.camY);
+    ctx.fillStyle = 'rgba(168,179,214,.9)';
+    ctx.font = '12px ui-monospace, Menlo, monospace';
+    ctx.fillText(`cam: ${state.camX.toFixed(1)}, ${state.camY.toFixed(1)} · zoom: ${state.zoom.toFixed(2)}`, 12, h - 14);
+
+    // crosshair
+    ctx.strokeStyle = 'rgba(124,246,255,.35)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(star.x, star.y, radius + 6, 0, Math.PI * 2);
+    ctx.moveTo(p.x-8, p.y);
+    ctx.lineTo(p.x+8, p.y);
+    ctx.moveTo(p.x, p.y-8);
+    ctx.lineTo(p.x, p.y+8);
     ctx.stroke();
   }
-  ctx.font = '12px "IBM Plex Sans", system-ui, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.textAlign = 'center';
-  ctx.fillText(star.label, star.x, star.y - radius - 6);
-  ctx.restore();
-}
 
-function screenToWorld(sx, sy) {
-  return {
-    x: (sx - width / 2) / camera.zoom + camera.x,
-    y: (sy - height / 2) / camera.zoom + camera.y,
-  };
-}
-
-function pickStar(wx, wy) {
-  const pickRadius = 12 / camera.zoom;
-  let closest = null;
-  let closestDist = Infinity;
-  for (const star of stars) {
-    const dx = wx - star.x;
-    const dy = wy - star.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist < pickRadius && dist < closestDist) {
-      closestDist = dist;
-      closest = star;
+  function hexToRgba(hex, a){
+    const h = hex.replace('#','');
+    let r=170,g=190,b=255;
+    if(h.length===3){
+      r = parseInt(h[0]+h[0],16);
+      g = parseInt(h[1]+h[1],16);
+      b = parseInt(h[2]+h[2],16);
+    } else if(h.length===6){
+      r = parseInt(h.slice(0,2),16);
+      g = parseInt(h.slice(2,4),16);
+      b = parseInt(h.slice(4,6),16);
     }
+    return `rgba(${r},${g},${b},${a})`;
   }
-  return closest;
-}
 
-function statusMessage(text) {
-  statusEl.textContent = text;
-}
+  function step(dt){
+    // keyboard drift
+    const accel = 900; // world units/s^2
+    const maxV = 520;
+    let ax = 0, ay = 0;
 
-function clamp(val, min, max) {
-  return Math.max(min, Math.min(max, val));
-}
+    const k = state.keys;
+    if(k.has('ArrowLeft') || k.has('a') || k.has('A')) ax -= accel;
+    if(k.has('ArrowRight') || k.has('d') || k.has('D')) ax += accel;
+    if(k.has('ArrowUp') || k.has('w') || k.has('W')) ay -= accel;
+    if(k.has('ArrowDown') || k.has('s') || k.has('S')) ay += accel;
 
-function buildAmbientStars(count) {
-  const arr = [];
-  for (let i = 0; i < count; i += 1) {
-    const r = 1800 * Math.sqrt(Math.random()) + 400;
-    const theta = Math.random() * Math.PI * 2;
-    arr.push({
-      x: Math.cos(theta) * r,
-      y: Math.sin(theta) * r,
-      brightness: Math.random(),
-    });
+    state.velX = clamp(state.velX + ax*dt, -maxV, maxV);
+    state.velY = clamp(state.velY + ay*dt, -maxV, maxV);
+
+    // friction
+    const fr = Math.pow(0.0007, dt);
+    state.velX *= fr;
+    state.velY *= fr;
+
+    state.camX += state.velX * dt;
+    state.camY += state.velY * dt;
   }
-  return arr;
-}
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now-last)/1000);
+    last = now;
+
+    step(dt);
+
+    drawBackground();
+    drawGrid();
+    drawStars();
+    drawHud();
+
+    requestAnimationFrame(loop);
+  }
+
+  // init
+  resize();
+  // Ensure panel is hidden by default for screen readers
+  panel.setAttribute('aria-hidden', 'true');
+  tooltip.setAttribute('aria-hidden', 'true');
+
+  loadMarks();
+  requestAnimationFrame(loop);
+})();
