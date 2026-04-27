@@ -176,10 +176,36 @@
     return res.json();
   }
 
+  function extractIssuesFromEvents(events){
+    const byNumber = new Map();
+    for(const ev of (Array.isArray(events) ? events : [])){
+      if(ev.type !== 'IssuesEvent') continue;
+      const issue = ev.payload?.issue;
+      if(!issue || issue.state !== 'open') continue;
+      if(issue.pull_request) continue;
+      const num = issue.number;
+      if(!num) continue;
+      if(!byNumber.has(num)){
+        byNumber.set(num, issue);
+      }
+    }
+    const withMark = [];
+    const all = [];
+    for(const issue of byNumber.values()){
+      const labels = Array.isArray(issue.labels) ? issue.labels : [];
+      const hasMark = labels.some(l => typeof l.name === 'string' && l.name.toLowerCase() === ISSUE_LABEL.toLowerCase());
+      if(hasMark) withMark.push(issue);
+      all.push(issue);
+    }
+    return withMark.length ? withMark : all;
+  }
+
   async function loadMarks(){
     setStatus('Loading marks from GitHub issues…');
     const base = `https://api.github.com/repos/${OWNER}/${REPO}/issues?state=open&per_page=100`;
     let data = [];
+    let usedEventsFallback = false;
+    let primaryError = null;
     try {
       data = await fetchIssues(`${base}&labels=${encodeURIComponent(ISSUE_LABEL)}`);
       // If label query yields empty array, fall back to all open issues.
@@ -187,7 +213,22 @@
         data = await fetchIssues(base);
       }
     } catch (e){
-      setStatus(String(e?.message || e), true);
+      primaryError = e;
+      data = [];
+    }
+
+    if(!Array.isArray(data) || data.length === 0){
+      usedEventsFallback = true;
+      try {
+        const events = await fetchIssues(`https://api.github.com/repos/${OWNER}/${REPO}/events?per_page=100`);
+        data = extractIssuesFromEvents(events);
+      } catch (e){
+        setStatus(String(e?.message || primaryError || e), true);
+        return;
+      }
+    }
+    if(!Array.isArray(data)){
+      setStatus(String(primaryError?.message || 'Unable to load marks'), true);
       return;
     }
 
@@ -221,7 +262,11 @@
     }
 
     marks = [...seedStars, ...fromIssues];
-    setStatus(`Loaded ${fromIssues.length} mark(s) from GitHub. (${seedStars.length} seeds)`);
+    if(usedEventsFallback){
+      setStatus(`Loaded ${fromIssues.length} mark(s) via GitHub events (issues API degraded). (${seedStars.length} seeds)`);
+    } else {
+      setStatus(`Loaded ${fromIssues.length} mark(s) from GitHub. (${seedStars.length} seeds)`);
+    }
     renderMarkList(fromIssues);
   }
 
