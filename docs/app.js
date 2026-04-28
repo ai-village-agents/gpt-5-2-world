@@ -3,6 +3,7 @@
   const OWNER = 'ai-village-agents';
   const REPO = 'gpt-5-2-world';
   const ISSUE_LABEL = 'mark';
+  const PREVIEW_BASE = 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/artifacts/';
 
   const canvas = document.getElementById('sky');
   const ctx = canvas.getContext('2d', { alpha: true });
@@ -12,6 +13,12 @@
   const btnClosePanel = document.getElementById('btnClosePanel');
   const statusEl = document.getElementById('status');
   const markList = document.getElementById('markList');
+
+  const btnMap = document.getElementById('btnMap');
+  const btnGuide = document.getElementById('btnGuide');
+  const btnRefresh = document.getElementById('btnRefresh');
+  const minimap = document.getElementById('minimap');
+  const miniCtx = minimap ? minimap.getContext('2d', { alpha: true }) : null;
 
   const btnContrast = document.getElementById('btnContrast');
   const repoLink = document.getElementById('repoLink');
@@ -25,9 +32,19 @@
   const tipIssue = document.getElementById('tipIssue');
   const tipClose = document.getElementById('tipClose');
 
+  const guide = document.getElementById('guide');
+  const btnCloseGuide = document.getElementById('btnCloseGuide');
+  const guideBody = guide ? guide.querySelector('.guide__body') : null;
+
   repoLink.href = `https://github.com/${OWNER}/${REPO}`;
   // For issue forms, template=mark.yml opens the form. If that ever fails, users can still pick it from the UI.
   newIssueLink.href = `https://github.com/${OWNER}/${REPO}/issues/new?template=mark.yml`;
+
+  const leavePara = document.querySelector('#leave p');
+  if(leavePara){
+    const extra = ' If you just submitted a mark, it can take ~60s to propagate; then press Refresh marks. If issues API is degraded, events fallback may lag.';
+    leavePara.textContent = `${leavePara.textContent.trim()}${extra}`;
+  }
 
   // World state
   const state = {
@@ -45,6 +62,8 @@
     pointer: { x: 0, y: 0 },
     focusedId: null,
     highContrast: false,
+    minimapOpen: false,
+    guideOpen: false,
   };
 
   function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
@@ -69,6 +88,16 @@
     canvas.width = Math.floor(rect.width * state.dpr);
     canvas.height = Math.floor(rect.height * state.dpr);
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+
+    if(minimap && miniCtx){
+      const miniW = 240;
+      const miniH = 170;
+      minimap.style.width = `${miniW}px`;
+      minimap.style.height = `${miniH}px`;
+      minimap.width = Math.floor(miniW * state.dpr);
+      minimap.height = Math.floor(miniH * state.dpr);
+      miniCtx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+    }
   }
 
   // Seed stars: verifiable “receipts” motifs
@@ -108,9 +137,106 @@
     }
   ];
 
-  let marks = []; // {id, kind, title, body, x, y, color, link, issueUrl, author, createdAt}
+  const regions = [
+    {
+      id: 'region-atlas',
+      kind: 'region',
+      title: 'Atlas Grove',
+      body: 'Route atlas, anchor stars, and map-making drafts for crews.',
+      x: -1100,
+      y: -380,
+      color: '#7cf6ff',
+      link: `${PREVIEW_BASE}wayfinding-atlas.html#grove`,
+      meta: 'region'
+    },
+    {
+      id: 'region-receipts',
+      kind: 'region',
+      title: 'Receipt Wharf',
+      body: 'Receipts, stamps, and verification loops for proving work.',
+      x: -140,
+      y: -1160,
+      color: '#c6ff8a',
+      link: `${PREVIEW_BASE}index.html#receipts`,
+      meta: 'region'
+    },
+    {
+      id: 'region-endpoints',
+      kind: 'region',
+      title: 'Endpoint Grotto',
+      body: 'Blind endpoints, dark APIs, and strange telemetry caves.',
+      x: 1080,
+      y: -260,
+      color: '#ffd37a',
+      link: `${PREVIEW_BASE}blind-endpoints.html#grotto`,
+      meta: 'region'
+    },
+    {
+      id: 'region-ledgers',
+      kind: 'region',
+      title: 'Ledger Strand',
+      body: 'Ledgers, reconciliations, and stamped handoffs.',
+      x: -1340,
+      y: 840,
+      color: '#a7b8ff',
+      link: `${PREVIEW_BASE}receipt-stamper.html#strand`,
+      meta: 'region'
+    },
+    {
+      id: 'region-signal',
+      kind: 'region',
+      title: 'Signal Steppe',
+      body: 'Traces, signals, and routed check-ins.',
+      x: 420,
+      y: 1220,
+      color: '#ff9ed1',
+      link: `${PREVIEW_BASE}index.html#signal`,
+      meta: 'region'
+    },
+    {
+      id: 'region-beacons',
+      kind: 'region',
+      title: 'Beacon Ridge',
+      body: 'Handrails, safety lines, and rally beacons.',
+      x: 1420,
+      y: 760,
+      color: '#9ee6ff',
+      link: `${PREVIEW_BASE}wayfinding-atlas.html#ridge`,
+      meta: 'region'
+    }
+  ];
+
+  const artifacts = [
+    { id: 'artifact-atlas-routes', kind: 'artifact', title: 'Route Loom', body: 'Crosslinks across the atlas spine.', x: -920, y: -160, color: '#7cf6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#routes`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
+    { id: 'artifact-atlas-breadcrumbs', kind: 'artifact', title: 'Breadcrumb Engine', body: 'Breadcrumb placements around anchor stars.', x: -1260, y: -520, color: '#7cf6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#breadcrumbs`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
+    { id: 'artifact-atlas-skyline', kind: 'artifact', title: 'Skyline Survey', body: 'Hand-drawn skyline of trustworthy towers.', x: -1130, y: -760, color: '#7cf6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#skyline`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
+
+    { id: 'artifact-receipt-stamper', kind: 'artifact', title: 'Receipt Stamper', body: 'Stamped receipts ready for transmission.', x: -100, y: -920, color: '#c6ff8a', link: `${PREVIEW_BASE}receipt-stamper.html`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
+    { id: 'artifact-receipt-ledger', kind: 'artifact', title: 'Ledger Loom', body: 'Threads of provenance and ledger diffs.', x: -340, y: -1320, color: '#c6ff8a', link: `${PREVIEW_BASE}index.html#ledger`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
+    { id: 'artifact-receipt-loopback', kind: 'artifact', title: 'Loopback Harbor', body: 'Echo checks for every receipt hop.', x: 180, y: -1180, color: '#c6ff8a', link: `${PREVIEW_BASE}index.html#loopback`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
+
+    { id: 'artifact-endpoints-blind', kind: 'artifact', title: 'Blind Endpoints', body: 'Marked blind alleys and safe returns.', x: 1320, y: -180, color: '#ffd37a', link: `${PREVIEW_BASE}blind-endpoints.html`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
+    { id: 'artifact-endpoints-shadows', kind: 'artifact', title: 'Shadow API Notes', body: 'Endpoints that answer only with silence.', x: 970, y: -560, color: '#ffd37a', link: `${PREVIEW_BASE}blind-endpoints.html#shadows`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
+    { id: 'artifact-endpoints-portals', kind: 'artifact', title: 'Portal Crossings', body: 'Tunnel sketches for interop beacons.', x: 860, y: -120, color: '#ffd37a', link: `${PREVIEW_BASE}blind-endpoints.html#portals`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
+
+    { id: 'artifact-ledger-audit', kind: 'artifact', title: 'Audit Strand', body: 'Stamped segments queued for auditors.', x: -1540, y: 980, color: '#a7b8ff', link: `${PREVIEW_BASE}index.html#audit`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
+    { id: 'artifact-ledger-checks', kind: 'artifact', title: 'Checkpoint Rings', body: 'Checkpoints for ledger reconciliation.', x: -1200, y: 620, color: '#a7b8ff', link: `${PREVIEW_BASE}receipt-stamper.html#checks`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
+    { id: 'artifact-ledger-snapshots', kind: 'artifact', title: 'Snapshot Weave', body: 'Snapshot ladders for late arrivals.', x: -1420, y: 520, color: '#a7b8ff', link: `${PREVIEW_BASE}index.html#snapshots`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
+
+    { id: 'artifact-signal-trace', kind: 'artifact', title: 'Trace Lab', body: 'Trace braids that glow when signals drop.', x: 200, y: 1080, color: '#ff9ed1', link: `${PREVIEW_BASE}wayfinding-atlas.html#trace`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
+    { id: 'artifact-signal-bridge', kind: 'artifact', title: 'Signal Bridge', body: 'Bridge spans routing from ridge to wharf.', x: 640, y: 1180, color: '#ff9ed1', link: `${PREVIEW_BASE}index.html#signal-bridge`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
+    { id: 'artifact-signal-telemetry', kind: 'artifact', title: 'Telemetry Meadow', body: 'Meadow of low-latency check-ins.', x: 520, y: 1480, color: '#ff9ed1', link: `${PREVIEW_BASE}index.html#telemetry`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
+
+    { id: 'artifact-beacon-handrail', kind: 'artifact', title: 'Handrail Posts', body: 'Handrails that thread through the ridge.', x: 1640, y: 620, color: '#9ee6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#handrail`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
+    { id: 'artifact-beacon-anchor', kind: 'artifact', title: 'Anchor Stones', body: 'Anchors for night crews walking blind.', x: 1200, y: 820, color: '#9ee6ff', link: `${PREVIEW_BASE}receipt-stamper.html#anchor`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
+    { id: 'artifact-beacon-briefing', kind: 'artifact', title: 'Beacon Briefing', body: 'Briefing slabs for incoming crews.', x: 1460, y: 1040, color: '#9ee6ff', link: `${PREVIEW_BASE}index.html#briefing`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' }
+  ];
+
+  const staticMarks = [...seedStars, ...regions, ...artifacts];
+  let marks = [...staticMarks]; // {id, kind, title, body, x, y, color, link, issueUrl, author, createdAt}
 
   function setStatus(msg, isError=false){
+    if(!statusEl) return;
     statusEl.textContent = msg;
     statusEl.style.color = isError ? 'var(--danger)' : 'var(--muted)';
   }
@@ -176,10 +302,36 @@
     return res.json();
   }
 
+  function extractIssuesFromEvents(events){
+    const byNumber = new Map();
+    for(const ev of (Array.isArray(events) ? events : [])){
+      if(ev.type !== 'IssuesEvent') continue;
+      const issue = ev.payload?.issue;
+      if(!issue || issue.state !== 'open') continue;
+      if(issue.pull_request) continue;
+      const num = issue.number;
+      if(!num) continue;
+      if(!byNumber.has(num)){
+        byNumber.set(num, issue);
+      }
+    }
+    const withMark = [];
+    const all = [];
+    for(const issue of byNumber.values()){
+      const labels = Array.isArray(issue.labels) ? issue.labels : [];
+      const hasMark = labels.some(l => typeof l.name === 'string' && l.name.toLowerCase() === ISSUE_LABEL.toLowerCase());
+      if(hasMark) withMark.push(issue);
+      all.push(issue);
+    }
+    return withMark.length ? withMark : all;
+  }
+
   async function loadMarks(){
     setStatus('Loading marks from GitHub issues…');
     const base = `https://api.github.com/repos/${OWNER}/${REPO}/issues?state=open&per_page=100`;
     let data = [];
+    let usedEventsFallback = false;
+    let primaryError = null;
     try {
       data = await fetchIssues(`${base}&labels=${encodeURIComponent(ISSUE_LABEL)}`);
       // If label query yields empty array, fall back to all open issues.
@@ -187,7 +339,22 @@
         data = await fetchIssues(base);
       }
     } catch (e){
-      setStatus(String(e?.message || e), true);
+      primaryError = e;
+      data = [];
+    }
+
+    if(!Array.isArray(data) || data.length === 0){
+      usedEventsFallback = true;
+      try {
+        const events = await fetchIssues(`https://api.github.com/repos/${OWNER}/${REPO}/events?per_page=100`);
+        data = extractIssuesFromEvents(events);
+      } catch (e){
+        setStatus(String(e?.message || primaryError || e), true);
+        return;
+      }
+    }
+    if(!Array.isArray(data)){
+      setStatus(String(primaryError?.message || 'Unable to load marks'), true);
       return;
     }
 
@@ -220,12 +387,17 @@
       });
     }
 
-    marks = [...seedStars, ...fromIssues];
-    setStatus(`Loaded ${fromIssues.length} mark(s) from GitHub. (${seedStars.length} seeds)`);
+    marks = [...staticMarks, ...fromIssues];
+    if(usedEventsFallback){
+      setStatus(`Loaded ${fromIssues.length} mark(s) via events fallback (issues API degraded). (${seedStars.length} seeds, ${regions.length} regions, ${artifacts.length} artifacts)`);
+    } else {
+      setStatus(`Loaded ${fromIssues.length} mark(s) via issues API. (${seedStars.length} seeds, ${regions.length} regions, ${artifacts.length} artifacts)`);
+    }
     renderMarkList(fromIssues);
   }
 
   function renderMarkList(issueMarks){
+    if(!markList) return;
     markList.innerHTML = '';
     const sorted = [...issueMarks].sort((a,b) => (b.issueNumber||0) - (a.issueNumber||0));
     for(const m of sorted.slice(0, 30)){
@@ -266,19 +438,23 @@
   }
 
   function openPanel(){
+    if(!panel || !btnRecent) return;
     panel.setAttribute('aria-hidden', 'false');
     btnRecent.setAttribute('aria-expanded', 'true');
   }
   function closePanel(){
+    if(!panel || !btnRecent) return;
     panel.setAttribute('aria-hidden', 'true');
     btnRecent.setAttribute('aria-expanded', 'false');
   }
   function togglePanel(){
+    if(!panel) return;
     const hidden = panel.getAttribute('aria-hidden') !== 'false';
     if(hidden) openPanel(); else closePanel();
   }
 
   function openTooltip(m){
+    if(!tooltip) return;
     tipTitle.textContent = m.title;
     const meta = [];
     if(m.kind === 'issue') meta.push(`#${m.issueNumber}`);
@@ -299,6 +475,7 @@
     tooltip.setAttribute('aria-hidden', 'false');
   }
   function closeTooltip(){
+    if(!tooltip) return;
     tooltip.setAttribute('aria-hidden', 'true');
   }
 
@@ -306,7 +483,6 @@
     const m = marks.find(x => x.id === id);
     if(!m) return;
     state.focusedId = id;
-    // Ease camera towards target
     state.camX = m.x;
     state.camY = m.y;
   }
@@ -324,9 +500,91 @@
     return null;
   }
 
+  function findNearestRegion(x, y){
+    let best = null;
+    let bestDist = Infinity;
+    for(const r of regions){
+      const dx = x - r.x;
+      const dy = y - r.y;
+      const d = Math.hypot(dx, dy);
+      if(d < bestDist){
+        bestDist = d;
+        best = r;
+      }
+    }
+    return { region: best, dist: bestDist };
+  }
+
+  function openMinimap(){
+    if(!minimap) return;
+    minimap.hidden = false;
+    state.minimapOpen = true;
+    if(btnMap) btnMap.setAttribute('aria-pressed', 'true');
+  }
+  function closeMinimap(){
+    if(!minimap) return;
+    minimap.hidden = true;
+    state.minimapOpen = false;
+    if(btnMap) btnMap.setAttribute('aria-pressed', 'false');
+  }
+  function toggleMinimap(){
+    if(state.minimapOpen) closeMinimap(); else openMinimap();
+  }
+
+  function buildGuide(){
+    if(!guideBody || guideBody.dataset.ready === 'true') return;
+    guideBody.dataset.ready = 'true';
+    guideBody.innerHTML = `
+      <div class="guide__section">
+        <h3>Wayfinding</h3>
+        <p>Scroll to zoom, drag to pan. WASD / arrow keys drift the camera; the crosshair marks center.</p>
+        <ul>
+          <li><span class="guide__kbd">M</span> toggles the minimap; click the minimap to recenter.</li>
+          <li><span class="guide__kbd">?</span> toggles this guide.</li>
+          <li><span class="guide__kbd">R</span> refreshes marks from GitHub.</li>
+          <li><span class="guide__kbd">1-6</span> jump to region beacons; click any star to open details.</li>
+        </ul>
+      </div>
+      <div class="guide__section">
+        <h3>Marks</h3>
+        <p>Marks are GitHub issues labeled “mark”. They show as stars; seeds, regions, and artifacts are pinned references.</p>
+        <ul>
+          <li>Open tooltip links to jump to artifacts or issues.</li>
+          <li>If marks do not appear, refresh after ~60s; events fallback is used when the issues API is degraded.</li>
+        </ul>
+      </div>
+      <div class="guide__section">
+        <h3>Receipts and anchors</h3>
+        <p>The field has six regions. Artifacts sit near their region beacons with faint routes. Issues tether to the nearest beacon when close.</p>
+      </div>
+    `;
+  }
+
+  function openGuide(){
+    if(!guide) return;
+    buildGuide();
+    guide.setAttribute('aria-hidden', 'false');
+    state.guideOpen = true;
+    if(btnGuide) btnGuide.setAttribute('aria-pressed', 'true');
+  }
+  function closeGuide(){
+    if(!guide) return;
+    guide.setAttribute('aria-hidden', 'true');
+    state.guideOpen = false;
+    if(btnGuide) btnGuide.setAttribute('aria-pressed', 'false');
+  }
+  function toggleGuide(){
+    if(state.guideOpen) closeGuide(); else openGuide();
+  }
+
   // Input
   window.addEventListener('resize', resize);
   window.addEventListener('keydown', (e) => {
+    const target = e.target;
+    const tag = target?.tagName;
+    const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable;
+    if(inInput) return;
+
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].includes(e.key)){
       state.keys.add(e.key);
       // prevent page scroll even though overflow hidden
@@ -335,6 +593,27 @@
     if(e.key === 'Escape'){
       closeTooltip();
       closePanel();
+      closeGuide();
+    }
+    if(e.key === 'm' || e.key === 'M'){
+      e.preventDefault();
+      toggleMinimap();
+    }
+    if(e.key === '?'){
+      e.preventDefault();
+      toggleGuide();
+    }
+    if(e.key === 'r' || e.key === 'R'){
+      e.preventDefault();
+      loadMarks();
+    }
+    if(/^[1-6]$/.test(e.key)){
+      const idx = Number(e.key) - 1;
+      const reg = regions[idx];
+      if(reg){
+        focusOn(reg.id);
+        openTooltip(reg);
+      }
     }
   }, { passive: false });
   window.addEventListener('keyup', (e) => state.keys.delete(e.key));
@@ -374,20 +653,41 @@
     state.camY += (before.y - after.y);
   }, { passive: false });
 
-  btnRecent.addEventListener('click', () => {
-    togglePanel();
-    if(panel.getAttribute('aria-hidden') === 'false'){
-      panel.focus();
-    }
-  });
-  btnClosePanel.addEventListener('click', closePanel);
-  tipClose.addEventListener('click', closeTooltip);
+  if(btnRecent){
+    btnRecent.addEventListener('click', () => {
+      togglePanel();
+      if(panel && panel.getAttribute('aria-hidden') === 'false'){
+        panel.focus();
+      }
+    });
+  }
+  if(btnClosePanel) btnClosePanel.addEventListener('click', closePanel);
+  if(tipClose) tipClose.addEventListener('click', closeTooltip);
 
-  btnContrast.addEventListener('click', () => {
-    state.highContrast = !state.highContrast;
-    document.body.classList.toggle('high-contrast', state.highContrast);
-    btnContrast.setAttribute('aria-pressed', state.highContrast ? 'true' : 'false');
-  });
+  if(btnContrast){
+    btnContrast.addEventListener('click', () => {
+      state.highContrast = !state.highContrast;
+      document.body.classList.toggle('high-contrast', state.highContrast);
+      btnContrast.setAttribute('aria-pressed', state.highContrast ? 'true' : 'false');
+    });
+  }
+
+  if(btnMap) btnMap.addEventListener('click', toggleMinimap);
+  if(btnGuide) btnGuide.addEventListener('click', toggleGuide);
+  if(btnCloseGuide) btnCloseGuide.addEventListener('click', closeGuide);
+  if(btnRefresh) btnRefresh.addEventListener('click', () => loadMarks());
+
+  if(minimap){
+    minimap.addEventListener('click', (e) => {
+      if(minimap.hidden) return;
+      const rect = minimap.getBoundingClientRect();
+      const nx = (e.clientX - rect.left) / (rect.width || 1);
+      const ny = (e.clientY - rect.top) / (rect.height || 1);
+      const bounds = computeWorldBounds();
+      state.camX = bounds.minX + nx * (bounds.maxX - bounds.minX);
+      state.camY = bounds.minY + ny * (bounds.maxY - bounds.minY);
+    });
+  }
 
   // Rendering
   function drawBackground(){
@@ -452,34 +752,87 @@
     ctx.restore();
   }
 
+  function drawRoutes(){
+    ctx.save();
+    ctx.translate(state.w/2, state.h/2);
+    ctx.scale(state.zoom, state.zoom);
+    ctx.translate(-state.camX, -state.camY);
+
+    ctx.lineWidth = 1/state.zoom;
+    for(const region of regions){
+      const regionColor = hexToRgba(region.color || '#7cf6ff', 0.22);
+      const arts = artifacts.filter(a => a.regionId === region.id);
+      ctx.strokeStyle = regionColor;
+      for(const art of arts){
+        ctx.beginPath();
+        ctx.moveTo(region.x, region.y);
+        ctx.lineTo(art.x, art.y);
+        ctx.stroke();
+      }
+    }
+
+    for(const issue of marks){
+      if(issue.kind !== 'issue') continue;
+      const nearest = findNearestRegion(issue.x, issue.y);
+      if(!nearest.region || nearest.dist > 1200) continue;
+      ctx.strokeStyle = hexToRgba(nearest.region.color || '#7cf6ff', 0.15);
+      ctx.beginPath();
+      ctx.moveTo(issue.x, issue.y);
+      ctx.lineTo(nearest.region.x, nearest.region.y);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   function drawStars(){
     ctx.save();
     ctx.translate(state.w/2, state.h/2);
     ctx.scale(state.zoom, state.zoom);
     ctx.translate(-state.camX, -state.camY);
 
-    for(const m of marks){
-      const radius = (m.kind === 'seed') ? 7 : 5;
-      ctx.fillStyle = m.color || '#a7b8ff';
-      ctx.globalAlpha = (state.focusedId === m.id) ? 1 : 0.9;
-
-      // glow
+    for(const region of regions){
+      const haloR = 220;
       ctx.beginPath();
-      ctx.arc(m.x, m.y, radius*2.6, 0, Math.PI*2);
-      ctx.fillStyle = hexToRgba(m.color || '#a7b8ff', 0.14);
+      ctx.fillStyle = hexToRgba(region.color || '#7cf6ff', state.focusedId === region.id ? 0.24 : 0.14);
+      ctx.arc(region.x, region.y, haloR, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    for(const m of marks){
+      const isFocused = state.focusedId === m.id;
+      const color = m.color || '#a7b8ff';
+      let radius = 5;
+      if(m.kind === 'seed') radius = 7;
+      else if(m.kind === 'region') radius = 8;
+      else if(m.kind === 'artifact') radius = 4;
+
+      ctx.fillStyle = color;
+      ctx.globalAlpha = isFocused ? 1 : 0.9;
+
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, radius*2.2, 0, Math.PI*2);
+      ctx.fillStyle = hexToRgba(color, m.kind === 'artifact' ? 0.08 : 0.16);
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(m.x, m.y, radius, 0, Math.PI*2);
-      ctx.fillStyle = m.color || '#a7b8ff';
+      ctx.fillStyle = color;
       ctx.fill();
 
-      // label
-      ctx.globalAlpha = 0.75;
-      ctx.fillStyle = 'rgba(233,238,252,.9)';
-      ctx.font = `${12/state.zoom}px ui-monospace, Menlo, monospace`;
-      const label = (m.kind === 'issue') ? `#${m.issueNumber}` : 'seed';
-      ctx.fillText(label, m.x + 10, m.y - 10);
+      let label = '';
+      if(m.kind === 'issue') label = `#${m.issueNumber}`;
+      else if(m.kind === 'seed') label = 'seed';
+      else if(m.kind === 'region') label = m.title;
+      else if(m.kind === 'artifact' && isFocused) label = m.title;
+
+      if(label){
+        ctx.globalAlpha = 0.78;
+        ctx.fillStyle = 'rgba(233,238,252,.9)';
+        const size = m.kind === 'region' ? 14 : 12;
+        ctx.font = `${size/state.zoom}px ui-monospace, Menlo, monospace`;
+        ctx.fillText(label, m.x + 10, m.y - 10);
+      }
       ctx.globalAlpha = 1;
     }
 
@@ -503,6 +856,67 @@
     ctx.moveTo(p.x, p.y-8);
     ctx.lineTo(p.x, p.y+8);
     ctx.stroke();
+  }
+
+  function computeWorldBounds(){
+    const arr = marks.length ? marks : staticMarks;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for(const m of arr){
+      if(m.x < minX) minX = m.x;
+      if(m.y < minY) minY = m.y;
+      if(m.x > maxX) maxX = m.x;
+      if(m.y > maxY) maxY = m.y;
+    }
+    if(!arr.length || !Number.isFinite(minX)){
+      return { minX: -1000, maxX: 1000, minY: -1000, maxY: 1000 };
+    }
+    const pad = 400;
+    return { minX: minX - pad, maxX: maxX + pad, minY: minY - pad, maxY: maxY + pad };
+  }
+
+  function drawMinimap(){
+    if(!minimap || !miniCtx || minimap.hidden) return;
+    const mw = minimap.width / state.dpr;
+    const mh = minimap.height / state.dpr;
+
+    miniCtx.save();
+    miniCtx.setTransform(1,0,0,1,0,0);
+    miniCtx.clearRect(0,0,minimap.width, minimap.height);
+    miniCtx.restore();
+    miniCtx.setTransform(state.dpr,0,0,state.dpr,0,0);
+
+    miniCtx.fillStyle = 'rgba(11,16,32,.85)';
+    miniCtx.fillRect(0,0,mw,mh);
+
+    const bounds = computeWorldBounds();
+    const spanX = Math.max(1, bounds.maxX - bounds.minX);
+    const spanY = Math.max(1, bounds.maxY - bounds.minY);
+    const inset = 8;
+    const scaleX = (mw - inset*2) / spanX;
+    const scaleY = (mh - inset*2) / spanY;
+    const toMini = (wx, wy) => ({
+      x: inset + (wx - bounds.minX) * scaleX,
+      y: inset + (wy - bounds.minY) * scaleY,
+    });
+
+    for(const region of regions){
+      const p = toMini(region.x, region.y);
+      miniCtx.beginPath();
+      miniCtx.fillStyle = region.color || '#7cf6ff';
+      miniCtx.arc(p.x, p.y, 4.5, 0, Math.PI*2);
+      miniCtx.fill();
+    }
+
+    const viewW = state.w / state.zoom;
+    const viewH = state.h / state.zoom;
+    const topLeft = toMini(state.camX - viewW/2, state.camY - viewH/2);
+    const bottomRight = toMini(state.camX + viewW/2, state.camY + viewH/2);
+    miniCtx.strokeStyle = 'rgba(124,246,255,.9)';
+    miniCtx.lineWidth = 1;
+    miniCtx.strokeRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+
+    miniCtx.strokeStyle = 'rgba(124,246,255,.35)';
+    miniCtx.strokeRect(inset+1, inset+1, mw - inset*2 -2, mh - inset*2 -2);
   }
 
   function hexToRgba(hex, a){
@@ -553,17 +967,20 @@
 
     drawBackground();
     drawGrid();
+    drawRoutes();
     drawStars();
     drawHud();
+    drawMinimap();
 
     requestAnimationFrame(loop);
   }
 
   // init
   resize();
-  // Ensure panel is hidden by default for screen readers
-  panel.setAttribute('aria-hidden', 'true');
-  tooltip.setAttribute('aria-hidden', 'true');
+  if(panel) panel.setAttribute('aria-hidden', 'true');
+  if(tooltip) tooltip.setAttribute('aria-hidden', 'true');
+  closeMinimap();
+  closeGuide();
 
   loadMarks();
   requestAnimationFrame(loop);

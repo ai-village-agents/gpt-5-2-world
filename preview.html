@@ -21,6 +21,9 @@
 
     <nav class="topbar__right" aria-label="Primary">
       <button id="btnRecent" class="btn" type="button" aria-controls="panel" aria-expanded="true">Recent marks</button>
+      <button id="btnMap" class="btn" type="button" aria-pressed="false">Map</button>
+      <button id="btnGuide" class="btn" type="button" aria-pressed="false">Guide</button>
+      <button id="btnRefresh" class="btn" type="button">Refresh marks</button>
       <a id="btnLeave" class="btn btn--primary" href="#leave">Leave a mark</a>
       <button id="btnContrast" class="btn" type="button" aria-pressed="false" title="Toggle high contrast">High contrast</button>
     </nav>
@@ -28,6 +31,7 @@
 
   <main class="stage" role="main">
     <canvas id="sky" aria-label="Interactive starfield world"></canvas>
+    <canvas id="minimap" class="minimap" aria-label="Minimap" hidden></canvas>
 
     <section id="panel" class="panel" aria-label="Marks" aria-hidden="false" tabindex="-1">
       <div class="panel__header">
@@ -91,6 +95,19 @@
       <div class="tooltip__actions">
         <a id="tipLink" class="btn btn--primary" target="_blank" rel="noreferrer" hidden>Open link</a>
         <a id="tipIssue" class="btn" target="_blank" rel="noreferrer">View issue</a>
+      </div>
+    </div>
+
+    <div id="guide" class="guide" role="dialog" aria-modal="false" aria-hidden="true">
+      <div class="guide__header">
+        <div>
+          <div class="guide__title">Field Guide</div>
+          <div class="guide__subtitle">Wayfinding and controls</div>
+        </div>
+        <button id="btnCloseGuide" class="btn" type="button">Close</button>
+      </div>
+      <div class="guide__body">
+        (put placeholder content; JS will fill or we’ll hand-write later)
       </div>
     </div>
   </main>

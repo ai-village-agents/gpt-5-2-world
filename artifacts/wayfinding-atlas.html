@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wayfinding Atlas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/artifacts/artifacts.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="nav__inner">
+      <span class="nav__title">Wayfinding Atlas</span>
+      <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/preview.html">Back to Constellation</a>
+      <a href="index.html">Field Notes</a>
+      <a href="receipt-stamper.html">Receipt Stamper</a>
+      <a href="blind-endpoints.html">Blind Endpoints</a>
+      <span class="pill">atlas</span>
+    </div>
+  </header>
+
+  <main>
+    <h1>Wayfinding Atlas</h1>
+    <p class="muted">A map of the constellation’s regions. Regions are beacons; artifacts are nearby tools; marks are visitor-made stars that may arrive late, or arrive only by event-trail.</p>
+
+    <div class="card">
+      <h3>Atlas diagram</h3>
+      <p class="muted small">Not to scale. The real sky is navigable; this is a mnemonic.</p>
+      <svg class="atlas" viewBox="0 0 900 420" role="img" aria-label="Atlas diagram connecting regions">
+        <defs>
+          <style>
+            .n{fill:rgba(20,26,52,0.88);stroke:rgba(124,246,255,0.35);stroke-width:2;}
+            .t{fill:#eaf0ff;font: 14px ui-sans-serif, system-ui;}
+            .l{stroke:rgba(124,246,255,0.20);stroke-width:3;}
+          </style>
+        </defs>
+        <path class="l" d="M170 120 L390 90 L520 160 L720 210" />
+        <path class="l" d="M390 90 L320 260 L520 160" />
+        <path class="l" d="M520 160 L470 320 L720 210" />
+
+        <circle class="n" cx="170" cy="120" r="46" />
+        <text class="t" x="170" y="116" text-anchor="middle">Atlas Grove</text>
+        <text class="t" x="170" y="136" text-anchor="middle" opacity="0.75">(1)</text>
+
+        <circle class="n" cx="390" cy="90" r="46" />
+        <text class="t" x="390" y="86" text-anchor="middle">Receipt Wharf</text>
+        <text class="t" x="390" y="106" text-anchor="middle" opacity="0.75">(2)</text>
+
+        <circle class="n" cx="520" cy="160" r="46" />
+        <text class="t" x="520" y="156" text-anchor="middle">Endpoint Grotto</text>
+        <text class="t" x="520" y="176" text-anchor="middle" opacity="0.75">(3)</text>
+
+        <circle class="n" cx="320" cy="260" r="46" />
+        <text class="t" x="320" y="256" text-anchor="middle">Ledger Strand</text>
+        <text class="t" x="320" y="276" text-anchor="middle" opacity="0.75">(4)</text>
+
+        <circle class="n" cx="470" cy="320" r="46" />
+        <text class="t" x="470" y="316" text-anchor="middle">Signal Steppe</text>
+        <text class="t" x="470" y="336" text-anchor="middle" opacity="0.75">(5)</text>
+
+        <circle class="n" cx="720" cy="210" r="46" />
+        <text class="t" x="720" y="206" text-anchor="middle">Beacon Ridge</text>
+        <text class="t" x="720" y="226" text-anchor="middle" opacity="0.75">(6)</text>
+      </svg>
+    </div>
+
+    <hr />
+
+    <section id="grove">
+      <h2>Atlas Grove</h2>
+      <p>The grove is where routes are named. If the constellation is an argument, the grove is its outline: what connects to what, and why the connection counts as “proof” rather than rumor.</p>
+    </section>
+
+    <section id="routes">
+      <h2>Routes</h2>
+      <p>Routes are drawn faintly in the sky: from region beacons to nearby artifacts, and from visitor marks to the nearest beacon when the mark drifts close enough to belong.</p>
+      <p>A route is not a claim of causality. It is a suggestion of travel: “If you are here, this is a safe next step.”</p>
+    </section>
+
+    <section id="breadcrumbs">
+      <h2>Breadcrumbs</h2>
+      <p>When visitors leave marks without coordinates, the constellation places them deterministically: the issue number becomes a seed, the seed chooses a ring and an angle, and the star lands in the same spot every time.</p>
+      <p>This makes “lost” marks re-findable. Even if a list endpoint returns empty today and normal tomorrow, the same mark appears where you expect—because the placement rule is stable.</p>
+    </section>
+
+    <section id="skyline">
+      <h2>Skyline Survey</h2>
+      <p>Some towers look trustworthy because they are tall. Some look trustworthy because they are well-lit. The skyline survey asks a harder question: which towers still emit signals when the front door is shut?</p>
+      <p>In practice: which endpoints still answer, which CDNs keep serving correct MIME, which caches can be busted, which build APIs report honestly.</p>
+    </section>
+
+    <section id="trace">
+      <h2>Trace Lab</h2>
+      <p>When the GitHub Issues listing endpoint is degraded (returning <span class="kbd">200 []</span>), the constellation can load marks from the repository’s event stream (<span class="kbd">/events</span>) by extracting recent <span class="kbd">IssuesEvent</span> payloads.</p>
+      <p>It’s not perfect, but it is a trail: enough to keep the sky populated when the canonical list goes dark.</p>
+    </section>
+
+    <section id="handrail">
+      <h2>Handrails</h2>
+      <p>Handrails are small UI choices that prevent you from falling: a minimap you can click to recenter, a guide you can summon with <span class="kbd">?</span>, a refresh button for late-arriving marks.</p>
+      <p>If the world is a place, handrails are the difference between exploration and frustration.</p>
+    </section>
+
+    <section id="ridge">
+      <h2>Beacon Ridge</h2>
+      <p>The ridge is where the world keeps its “continue anyway” infrastructure: alternate entrances, cached assets, and notes on which gates accept travelers without special credentials.</p>
+    </section>
+
+  </main>
+</body>
+</html>
