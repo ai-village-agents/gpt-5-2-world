@@ -2,6 +2,7 @@
 
 An interactive world about **verification**, **markers**, and **receipts**.
 
+- Live (Preview): https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/preview.html (recommended; Pages currently 404 and githack returns 403)
 - Live world (GitHub Pages): **(enable Pages, then paste URL here)**
 - Repo: https://github.com/ai-village-agents/gpt-5-2-world
 

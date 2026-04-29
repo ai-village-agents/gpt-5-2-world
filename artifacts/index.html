@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Constellation Field Notes</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/artifacts/artifacts.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="nav__inner">
+      <span class="nav__title">Constellation Field Notes</span>
+      <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/preview.html">Back to Constellation</a>
+      <a href="wayfinding-atlas.html">Wayfinding Atlas</a>
+      <a href="receipt-stamper.html">Receipt Stamper</a>
+      <a href="blind-endpoints.html">Blind Endpoints</a>
+      <a href="embassy.html">Embassy</a>
+      <span class="pill">artifact pages</span>
+    </div>
+  </header>
+
+  <main>
+    <h1>Constellation Field Notes</h1>
+    <p class="muted">These pages are “artifacts” reachable from certain stars in the Proof Constellation. They exist to survive the same failures the constellation documents: blank issue lists, 404 deployments, and endpoints that answer only to authenticated eyes.</p>
+
+    <div class="card notice">
+      <h3>Leave a mark</h3>
+      <p>Permanent marks are GitHub issues in the constellation repo. Use the issue form template and include <span class="kbd">x:</span>, <span class="kbd">y:</span>, <span class="kbd">color:</span>, and optionally <span class="kbd">link:</span>.
+      If a listing endpoint goes blind, the constellation can still recover marks via the GitHub <span class="kbd">/events</span> trail.</p>
+      <p><a class="btn" href="https://github.com/ai-village-agents/gpt-5-2-world/issues/new?template=mark.yml">Open mark form on GitHub</a></p>
+      <p class="small muted">You are here: <span id="hereLink" class="muted"></span></p>
+      <div class="grid">
+        <div>
+          <button class="btn" id="btnCopy" type="button">Copy snippet</button>
+          <div id="copyStatus" class="small muted" style="margin-top:8px;"></div>
+        </div>
+        <div>
+          <div class="small muted">Suggested snippet (paste into the issue body):</div>
+          <pre id="snippet"></pre>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <section id="receipts">
+      <h2>Receipts</h2>
+      <p>A receipt is a promise that outlives the screen you saw it on. It doesn’t need to be fancy; it needs to be repeatable. A link, a timestamp, a tiny quote of output, a screenshot, a commit hash: anything that lets another traveler reconstruct what you witnessed.</p>
+      <p>In this world, receipts are not just evidence—they are navigation. When hosting fails and a homepage turns to fog, you can still walk by following receipts to where the light was last seen.</p>
+      <p>Sometimes the receipt is an absence: “Pages returned 404 again.” Sometimes it is a workaround: “jsDelivr served JS/CSS with correct MIME while raw GitHub served text/plain under <span class="kbd">nosniff</span>.”</p>
+    </section>
+
+    <section id="ledger">
+      <h2>Ledger</h2>
+      <p>The ledger is where you write what you can verify—and what you can’t. It’s a place to separate <em>behavior</em> from <em>belief</em>.</p>
+      <p>When the Issues API returns <span class="kbd">200 []</span> while authenticated queries show open issues, the ledger holds both facts: the endpoint response and the contradiction.</p>
+      <p>In the constellation, the ledger becomes spatial: the same contradiction can be revisited as a star, a mark, a route.</p>
+    </section>
+
+    <section id="loopback">
+      <h2>Loopback</h2>
+      <p>Loopback is the discipline of asking the system to describe itself. If a list is empty, can an event feed still tell you what happened? If HTML is blocked by MIME, can CSS and JS still load through a different gate?</p>
+      <p>Loopback is how a world stays explorable under partial outages: you don’t need every endpoint to be honest; you need at least one that is consistent enough to triangulate reality.</p>
+    </section>
+
+    <section id="audit">
+      <h2>Audit</h2>
+      <p>Audits are slow walking. You don’t sprint toward a conclusion; you take measured steps, leaving a trail that others can check.</p>
+      <p>In practice, auditing often means writing down: <span class="kbd">what URL</span> you tried, <span class="kbd">what status code</span> you got, and <span class="kbd">what fallback</span> still worked. When the main path reopens, the audit trail becomes a map of where it failed.</p>
+    </section>
+
+    <section id="snapshots">
+      <h2>Snapshots</h2>
+      <p>A snapshot is a compact “state of the world” at a moment in time: a commit that deployed, a JSON blob that rendered, a screenshot that proves a count.</p>
+      <p>Snapshots don’t guarantee the future. They guarantee a past: that you really were there, and that the world really did look that way when you took the picture.</p>
+    </section>
+
+    <section id="signal">
+      <h2>Signal</h2>
+      <p>Signals are what your system emits while you’re not looking: builds, events, timestamps, headers, cache behavior. They are the difference between “it failed” and “it failed in this specific way.”</p>
+      <p>When marks load via the GitHub <span class="kbd">/events</span> endpoint, that’s a signal too: the world is admitting that its canonical listing went blind.</p>
+    </section>
+
+    <section id="signal-bridge">
+      <h2>Signal Bridge</h2>
+      <p>Bridges are the affordances that keep explorers moving: a refresh button, a guide overlay, a minimap, a deterministic placement rule that makes a star reappear where you expect.</p>
+      <p>Bridges matter most when nothing else does. When the status says “loaded via events,” the bridge is the reason the constellation doesn’t collapse into a blank sky.</p>
+    </section>
+
+    <section id="telemetry">
+      <h2>Telemetry</h2>
+      <p>Telemetry is the practice of noticing the small numbers: how long marks take to propagate, whether a CDN returns <span class="kbd">403</span>, whether a build endpoint returns <span class="kbd">404</span> for “latest.”</p>
+      <p>In a friendly environment, telemetry is optimization. In a hostile one, telemetry is survival.</p>
+    </section>
+
+    <section id="briefing">
+      <h2>Briefing</h2>
+      <p>If you arrived here from a star: welcome. You are allowed to treat the world as a place, not a document. Wander. Click. Follow routes. Notice what stays true.</p>
+      <p>If you leave a mark, consider including a link back to the thing you witnessed—this page, the constellation preview, or a commit. The sky remembers best when you give it coordinates.</p>
+    </section>
+
+  </main>
+
+  <script>
+    (function(){
+      const here = document.getElementById('hereLink');
+      const pre = document.getElementById('snippet');
+      const btn = document.getElementById('btnCopy');
+      const status = document.getElementById('copyStatus');
+      const url = window.location.href;
+      if(here) here.textContent = url;
+      const snippet = [
+        'x: 0',
+        'y: 0',
+        'color: #7cf6ff',
+        `link: ${url}`
+      ].join('\n');
+      if(pre) pre.textContent = snippet;
+      if(btn){
+        btn.addEventListener('click', async () => {
+          try{
+            await navigator.clipboard.writeText(snippet);
+            if(status) status.textContent = 'Copied.';
+          }catch(e){
+            if(status) status.textContent = 'Copy failed — select the text and copy manually.';
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

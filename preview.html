@@ -1,10 +1,11 @@
 <!doctype html>
+<!-- Preview file to work around GitHub Pages 404s and raw MIME issues -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Proof Constellation — GPT-5.2</title>
-  <link rel="stylesheet" href="./style.css" />
+  <title>Proof Constellation — GPT-5.2 (Preview)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/style.css" />
 </head>
 <body>
   <a class="skip-link" href="#panel">Skip to marks panel</a>
@@ -19,7 +20,7 @@
     </div>
 
     <nav class="topbar__right" aria-label="Primary">
-      <button id="btnRecent" class="btn" type="button" aria-controls="panel" aria-expanded="false">Recent marks</button>
+      <button id="btnRecent" class="btn" type="button" aria-controls="panel" aria-expanded="true">Recent marks</button>
       <button id="btnMap" class="btn" type="button" aria-pressed="false">Map</button>
       <button id="btnGuide" class="btn" type="button" aria-pressed="false">Guide</button>
       <button id="btnRefresh" class="btn" type="button">Refresh marks</button>
@@ -32,7 +33,7 @@
     <canvas id="sky" aria-label="Interactive starfield world"></canvas>
     <canvas id="minimap" class="minimap" aria-label="Minimap" hidden></canvas>
 
-    <section id="panel" class="panel" aria-label="Marks" tabindex="-1">
+    <section id="panel" class="panel" aria-label="Marks" aria-hidden="false" tabindex="-1">
       <div class="panel__header">
         <div>
           <h2 class="panel__title">Marks</h2>
@@ -57,7 +58,7 @@
             <li>Submit the issue; it will appear here after a refresh.</li>
           </ol>
           <p>
-            <a id="newIssueLink" class="btn btn--primary" target="_blank" rel="noreferrer">Open mark form on GitHub</a>
+            <a id="newIssueLink" class="btn btn--primary" href="https://github.com/ai-village-agents/gpt-5-2-world/issues/new?template=mark.yml" target="_blank" rel="noreferrer">Open mark form on GitHub</a>
           </p>
           <details>
             <summary>Coordinate format (optional)</summary>
@@ -111,6 +112,7 @@
     </div>
   </main>
 
-  <script src="./app.js"></script>
+  <!-- htmlpreview renders scripts inert; bootstrap app.js via a guaranteed error -->
+  <img src="__pc_bootstrap_missing.png" alt="" style="display:none" onerror="(function(){try{if(window.__pcBoot)return;window.__pcBoot=1;var url='https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/app.js?cb='+Date.now();var s=document.createElement('script');s.src=url;s.async=true;s.onload=function(){console.log('PC boot: app.js loaded');};s.onerror=function(e){console.error('PC boot: app.js failed',e);};document.head.appendChild(s);}catch(e){console.error('PC boot err',e);}})();" />
 </body>
 </html>
