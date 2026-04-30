@@ -84,8 +84,10 @@
             </label>
             <div class="flex">
               <button type="button" class="btn" id="copyBody">Copy issue body</button>
+              <button type="button" class="btn" id="selectBody">Select all</button>
               <div id="bodyStatus" class="small muted copy-status"></div>
             </div>
+            <div class="small muted" id="newlineDebug"></div>
 
             <a class="btn" href="https://github.com/ai-village-agents/gpt-5-2-world/issues/new?template=mark.yml">Open the Mark template</a>
           </div>
@@ -102,6 +104,7 @@
   <script>
     (function(){
       const defaults = { x: 1620, y: 940, color: '#9ee6ff' };
+      const NL = '\n';
       const els = {
         from: document.getElementById('from'),
         to: document.getElementById('to'),
@@ -116,7 +119,9 @@
         copyTitle: document.getElementById('copyTitle'),
         copyBody: document.getElementById('copyBody'),
         titleStatus: document.getElementById('titleStatus'),
-        bodyStatus: document.getElementById('bodyStatus')
+        bodyStatus: document.getElementById('bodyStatus'),
+        selectBody: document.getElementById('selectBody'),
+        newlineDebug: document.getElementById('newlineDebug')
       };
 
       const fallback = (value, backup) => value && value.trim ? (value.trim() || backup) : (value || backup);
@@ -127,29 +132,47 @@
         return `[Mark] Return Route: ${from} -> ${to}`;
       }
 
-      function buildBody() {
+      function normalizeNewlines(text) {
+        if (text == null) return '';
+        const str = String(text);
+        const lf = str.replace(/\r\n?/g, NL);
+        return lf.replace(/\\n/g, NL);
+      }
+
+      function buildBodyData() {
         const from = fallback(els.from.value, 'Signal Cartographer');
         const to = fallback(els.to.value, 'Proof Constellation');
         const x = Number.parseInt(els.x.value, 10) || defaults.x;
         const y = Number.parseInt(els.y.value, 10) || defaults.y;
         const color = fallback(els.color.value, defaults.color);
         const link = fallback(els.link.value, '');
-        const note = fallback(els.note.value, '');
-        const lines = [
+        const noteRaw = fallback(els.note.value, '');
+        const rawLines = [
           `x: ${x}`,
           `y: ${y}`,
           `color: ${color}`,
           `link: ${link}`
         ];
-        lines.push('');
-        lines.push(`Return route: ${from} -> ${to}`);
-        if (note) lines.push(`Note: ${note}`);
-        return lines.join(String.fromCharCode(10)); // use newlines between lines
+        rawLines.push('');
+        rawLines.push(`Return route: ${from} -> ${to}`);
+        if (noteRaw) rawLines.push(`Note: ${noteRaw}`);
+        const rawBody = rawLines.join(NL);
+        const body = normalizeNewlines(rawBody);
+        const literalSlashNCount = (rawBody.match(/\\n/g) || []).length;
+        const realNewlineCount = (body.match(/\n/g) || []).length;
+        return { body, rawBody, literalSlashNCount, realNewlineCount };
+      }
+
+      function updateNewlineDebug(literalCount, realCount) {
+        if (!els.newlineDebug) return;
+        els.newlineDebug.textContent = `Literal \\n: ${literalCount} · Real newlines: ${realCount}`;
       }
 
       function updateOutputs() {
+        const { body, literalSlashNCount, realNewlineCount } = buildBodyData();
         if (els.issueTitle) els.issueTitle.value = buildTitle();
-        if (els.issueBody) els.issueBody.value = buildBody();
+        if (els.issueBody) els.issueBody.value = body;
+        updateNewlineDebug(literalSlashNCount, realNewlineCount);
       }
 
       function randomOffset() {
@@ -211,7 +234,19 @@
         e.preventDefault();
         e.stopPropagation();
         updateOutputs();
-        copyString(buildBody(), els.bodyStatus, 'body');
+        const { body, literalSlashNCount, realNewlineCount } = buildBodyData();
+        updateNewlineDebug(literalSlashNCount, realNewlineCount);
+        copyString(body, els.bodyStatus, 'body');
+      });
+      if (els.selectBody) els.selectBody.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        updateOutputs();
+        if (els.issueBody) {
+          els.issueBody.focus();
+          els.issueBody.select();
+        }
+        transientStatus(els.bodyStatus, 'Selected snippet for manual copy.');
       });
 
       updateOutputs();

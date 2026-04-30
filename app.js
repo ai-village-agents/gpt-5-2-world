@@ -328,12 +328,42 @@
     return withMark.length ? withMark : all;
   }
 
+  function issueToMark(it){
+    if(!it || it.pull_request) return null;
+    const num = it.number;
+    if(num == null) return null;
+    const title = it.title || `Issue #${num}`;
+    const body = it.body || '';
+    const kv = parseKV(body);
+    const x = toNumMaybe(kv.x);
+    const y = toNumMaybe(kv.y);
+    const color = sanitizeColor(kv.color) || '#a7b8ff';
+    const link = (kv.link && /^https?:\/\//i.test(kv.link)) ? kv.link : null;
+    const pos = (x!=null && y!=null) ? {x, y} : deterministicPlacement(num);
+
+    return {
+      id: `issue-${num}`,
+      kind: 'issue',
+      issueNumber: num,
+      title,
+      body,
+      x: pos.x,
+      y: pos.y,
+      color,
+      link,
+      issueUrl: it.html_url,
+      author: it.user?.login || 'unknown',
+      createdAt: it.created_at || null,
+    };
+  }
+
   async function loadMarks(){
     setStatus('Loading marks from GitHub issues…');
     const base = `https://api.github.com/repos/${OWNER}/${REPO}/issues?state=open&per_page=100`;
     let data = [];
-    let usedEventsFallback = false;
+    let eventsIssues = [];
     let primaryError = null;
+    let eventsError = null;
     try {
       data = await fetchIssues(`${base}&labels=${encodeURIComponent(ISSUE_LABEL)}`);
       // If label query yields empty array, fall back to all open issues.
@@ -345,57 +375,59 @@
       data = [];
     }
 
-    if(!Array.isArray(data) || data.length === 0){
-      usedEventsFallback = true;
-      try {
-        const events = await fetchIssues(`https://api.github.com/repos/${OWNER}/${REPO}/events?per_page=100`);
-        data = extractIssuesFromEvents(events);
-      } catch (e){
-        setStatus(String(e?.message || primaryError || e), true);
-        return;
-      }
+    try {
+      const events = await fetchIssues(`https://api.github.com/repos/${OWNER}/${REPO}/events?per_page=100`);
+      eventsIssues = extractIssuesFromEvents(events);
+    } catch (e){
+      eventsError = e;
     }
-    if(!Array.isArray(data)){
-      setStatus(String(primaryError?.message || 'Unable to load marks'), true);
+
+    const issueMap = new Map();
+    const fromIssues = [];
+    const normalizedIssues = Array.isArray(data) ? data : [];
+    for(const it of normalizedIssues){
+      const mark = issueToMark(it);
+      if(!mark) continue;
+      issueMap.set(mark.issueNumber, mark);
+      fromIssues.push(mark);
+    }
+
+    let supplemented = 0;
+    const normalizedEvents = Array.isArray(eventsIssues) ? eventsIssues : [];
+    for(const evIssue of normalizedEvents){
+      const mark = issueToMark(evIssue);
+      if(!mark) continue;
+      if(issueMap.has(mark.issueNumber)) continue;
+      issueMap.set(mark.issueNumber, mark);
+      supplemented++;
+    }
+
+    const mergedMarks = Array.from(issueMap.values());
+    const seedCount = seedStars.length;
+    const regionCount = regions.length;
+    const artifactCount = artifacts.length;
+
+    if(mergedMarks.length === 0){
+      const errMsg = primaryError?.message || eventsError?.message;
+      if(errMsg){
+        setStatus(String(errMsg), true);
+      } else {
+        setStatus(`Loaded 0 mark(s). (${seedCount} seeds, ${regionCount} regions, ${artifactCount} artifacts)`);
+      }
+      renderMarkList([]);
       return;
     }
 
-    const fromIssues = [];
-    for(const it of (Array.isArray(data) ? data : [])){
-      if(it.pull_request) continue;
-      const num = it.number;
-      const title = it.title || `Issue #${num}`;
-      const body = it.body || '';
-      const kv = parseKV(body);
-      const x = toNumMaybe(kv.x);
-      const y = toNumMaybe(kv.y);
-      const color = sanitizeColor(kv.color) || '#a7b8ff';
-      const link = (kv.link && /^https?:\/\//i.test(kv.link)) ? kv.link : null;
-      const pos = (x!=null && y!=null) ? {x, y} : deterministicPlacement(num);
-
-      fromIssues.push({
-        id: `issue-${num}`,
-        kind: 'issue',
-        issueNumber: num,
-        title,
-        body,
-        x: pos.x,
-        y: pos.y,
-        color,
-        link,
-        issueUrl: it.html_url,
-        author: it.user?.login || 'unknown',
-        createdAt: it.created_at || null,
-      });
-    }
-
-    marks = [...staticMarks, ...fromIssues];
-    if(usedEventsFallback){
-      setStatus(`Loaded ${fromIssues.length} mark(s) via events fallback (issues API degraded). (${seedStars.length} seeds, ${regions.length} regions, ${artifacts.length} artifacts)`);
+    marks = [...staticMarks, ...mergedMarks];
+    if(fromIssues.length === 0 && normalizedEvents.length > 0){
+      const suffix = primaryError ? ' (issues API degraded)' : ' (issues API returned none)';
+      setStatus(`Loaded ${mergedMarks.length} mark(s) via events supplement${suffix}. (${seedCount} seeds, ${regionCount} regions, ${artifactCount} artifacts)`);
+    } else if(normalizedEvents.length > 0){
+      setStatus(`Loaded ${mergedMarks.length} mark(s) via issues API (+${supplemented} from events). (${seedCount} seeds, ${regionCount} regions, ${artifactCount} artifacts)`);
     } else {
-      setStatus(`Loaded ${fromIssues.length} mark(s) via issues API. (${seedStars.length} seeds, ${regions.length} regions, ${artifacts.length} artifacts)`);
+      setStatus(`Loaded ${mergedMarks.length} mark(s) via issues API. (${seedCount} seeds, ${regionCount} regions, ${artifactCount} artifacts)`);
     }
-    renderMarkList(fromIssues);
+    renderMarkList(mergedMarks);
   }
 
   function renderMarkList(issueMarks){
