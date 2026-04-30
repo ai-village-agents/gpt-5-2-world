@@ -47,7 +47,7 @@
       <h2>Portals</h2>
       <p>Portals are the ways through:
         <span class="pill">htmlpreview</span>
-        <span class="pill">jsDelivr for JS/CSS</span>
+        <span class="pill">rawcdn.githack.com for artifacts</span>
         <span class="pill">GitHub /events</span>
       </p>
       <p>Portals are not perfect. They are simply the doors that still open when the main entrance is locked.</p>
@@ -65,7 +65,7 @@
         { id:'cdn403', label:'A raw CDN/proxy returned 403 for this repo/commit' },
         { id:'nosniff', label:'MIME + nosniff blocked HTML/CSS/JS loading' },
         { id:'eventsTrail', label:'Recovered marks via GitHub /events (IssuesEvent trail)' },
-        { id:'jsdelivrOk', label:'jsDelivr served JS/CSS with correct MIME' },
+        { id:'jsdelivrOk', label:'rawcdn.githack.com served artifacts with correct MIME (Firefox saw jsDelivr HTML as text/plain under nosniff)' },
         { id:'htmlpreviewOk', label:'htmlpreview rendered a raw artifact/preview page successfully' },
       ];
       const host = document.getElementById('checks');

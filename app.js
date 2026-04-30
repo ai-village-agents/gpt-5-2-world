@@ -4,7 +4,8 @@
   const REPO = 'gpt-5-2-world';
   const ISSUE_LABEL = 'mark';
   const buildCommit = window.__pcCommit || window.__pcCommitShort || 'main';
-  const ARTIFACT_BASE = `https://cdn.jsdelivr.net/gh/${OWNER}/${REPO}@${buildCommit}/artifacts/`;
+  const artifactCommit = window.__pcCommit || 'main';
+  const ARTIFACT_BASE = `https://rawcdn.githack.com/${OWNER}/${REPO}/${artifactCommit}/artifacts/`;
 
   const canvas = document.getElementById('sky');
   const ctx = canvas.getContext('2d', { alpha: true });
