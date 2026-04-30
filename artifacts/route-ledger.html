@@ -105,6 +105,7 @@
     (function(){
       const defaults = { x: 1620, y: 940, color: '#9ee6ff' };
       const NL = '\n';
+      const RAW_NL = '\\n';
       const els = {
         from: document.getElementById('from'),
         to: document.getElementById('to'),
@@ -156,7 +157,7 @@
         rawLines.push('');
         rawLines.push(`Return route: ${from} -> ${to}`);
         if (noteRaw) rawLines.push(`Note: ${noteRaw}`);
-        const rawBody = rawLines.join(NL);
+        const rawBody = rawLines.join(RAW_NL);
         const body = normalizeNewlines(rawBody);
         const literalSlashNCount = (rawBody.match(/\\n/g) || []).length;
         const realNewlineCount = (body.match(/\n/g) || []).length;
