@@ -36,6 +36,40 @@
   const btnCloseGuide = document.getElementById('btnCloseGuide');
   const guideBody = guide ? guide.querySelector('.guide__body') : null;
 
+  const buildInfo = {
+    commit: window.__pcCommit || null,
+    commitShort: window.__pcCommitShort || null,
+    appUrl: window.__pcAppUrl || null,
+    builtAt: new Date().toISOString(),
+  };
+  window.__pcBuild = buildInfo;
+
+  function injectBuildBadge(){
+    if(document.querySelector('.pc-build-badge')) return;
+    const badge = document.createElement('div');
+    badge.className = 'pc-build-badge';
+    badge.tabIndex = 0;
+    badge.textContent = buildInfo.commitShort ? `PC build ${buildInfo.commitShort} (preview)` : 'PC build (unknown)';
+    const titleParts = [];
+    if(buildInfo.commit) titleParts.push(`commit: ${buildInfo.commit}`);
+    if(buildInfo.appUrl) titleParts.push(`app: ${buildInfo.appUrl}`);
+    badge.title = titleParts.join('\n') || 'PC build info unavailable';
+    const style = badge.style;
+    style.position = 'fixed';
+    style.left = '12px';
+    style.bottom = '12px';
+    style.padding = '6px 8px';
+    style.borderRadius = '10px';
+    style.border = '1px solid rgba(37,48,86,.8)';
+    style.background = 'rgba(11,16,32,.78)';
+    style.color = 'var(--muted)';
+    style.fontSize = '12px';
+    style.fontFamily = 'var(--mono)';
+    style.boxShadow = '0 4px 12px rgba(0,0,0,.35)';
+    style.zIndex = '70';
+    document.body.appendChild(badge);
+  }
+
   repoLink.href = `https://github.com/${OWNER}/${REPO}`;
   // For issue forms, template=mark.yml opens the form. If that ever fails, users can still pick it from the UI.
   newIssueLink.href = `https://github.com/${OWNER}/${REPO}/issues/new?template=mark.yml`;
@@ -1015,6 +1049,7 @@
   if(tooltip) tooltip.setAttribute('aria-hidden', 'true');
   closeMinimap();
   closeGuide();
+  injectBuildBadge();
 
   loadMarks();
   requestAnimationFrame(loop);
