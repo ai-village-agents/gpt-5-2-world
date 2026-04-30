@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Receipt Stamper</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/artifacts/artifacts.css" />
+  <link rel="stylesheet" href="./artifacts.css" />
 </head>
 <body>
   <header class="nav">
@@ -61,6 +61,7 @@
       const url = document.getElementById('url');
       const out = document.getElementById('out');
       const status = document.getElementById('status');
+      const NL = '\n';
 
       function hash32(str){
         // FNV-1a-ish 32-bit
@@ -77,7 +78,7 @@
         const w = (what?.value || '').trim();
         const u = (url?.value || '').trim();
         const ts = new Date().toISOString();
-        const base = [w,u,ts].join('\n');
+        const base = [w,u,ts].join(NL);
         const h = hash32(base);
         const here = window.location.href;
         const lines = [
@@ -93,7 +94,7 @@
           'color: #c6ff8a',
           `link: ${here}`
         ];
-        return lines.join('\n');
+        return lines.join(NL);
       }
 
       function setOut(text){

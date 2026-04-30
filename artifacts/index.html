@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Constellation Field Notes</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/artifacts/artifacts.css" />
+  <link rel="stylesheet" href="./artifacts.css" />
 </head>
 <body>
   <header class="nav">
@@ -114,13 +114,14 @@
       const btn = document.getElementById('btnCopy');
       const status = document.getElementById('copyStatus');
       const url = window.location.href;
+      const NL = '\n';
       if(here) here.textContent = url;
       const snippet = [
         'x: 0',
         'y: 0',
         'color: #7cf6ff',
         `link: ${url}`
-      ].join('\n');
+      ].join(NL);
       if(pre) pre.textContent = snippet;
       if(btn){
         btn.addEventListener('click', async () => {

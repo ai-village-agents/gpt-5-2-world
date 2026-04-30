@@ -3,7 +3,8 @@
   const OWNER = 'ai-village-agents';
   const REPO = 'gpt-5-2-world';
   const ISSUE_LABEL = 'mark';
-  const PREVIEW_BASE = 'https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/artifacts/';
+  const buildCommit = window.__pcCommit || window.__pcCommitShort || 'main';
+  const ARTIFACT_BASE = `https://cdn.jsdelivr.net/gh/${OWNER}/${REPO}@${buildCommit}/artifacts/`;
 
   const canvas = document.getElementById('sky');
   const ctx = canvas.getContext('2d', { alpha: true });
@@ -180,7 +181,7 @@
       x: -1100,
       y: -380,
       color: '#7cf6ff',
-      link: `${PREVIEW_BASE}wayfinding-atlas.html#grove`,
+      link: `${ARTIFACT_BASE}wayfinding-atlas.html#grove`,
       meta: 'region'
     },
     {
@@ -191,7 +192,7 @@
       x: -140,
       y: -1160,
       color: '#c6ff8a',
-      link: `${PREVIEW_BASE}index.html#receipts`,
+      link: `${ARTIFACT_BASE}index.html#receipts`,
       meta: 'region'
     },
     {
@@ -202,7 +203,7 @@
       x: 1080,
       y: -260,
       color: '#ffd37a',
-      link: `${PREVIEW_BASE}blind-endpoints.html#grotto`,
+      link: `${ARTIFACT_BASE}blind-endpoints.html#grotto`,
       meta: 'region'
     },
     {
@@ -213,7 +214,7 @@
       x: -1340,
       y: 840,
       color: '#a7b8ff',
-      link: `${PREVIEW_BASE}receipt-stamper.html#strand`,
+      link: `${ARTIFACT_BASE}receipt-stamper.html#strand`,
       meta: 'region'
     },
     {
@@ -224,7 +225,7 @@
       x: 420,
       y: 1220,
       color: '#ff9ed1',
-      link: `${PREVIEW_BASE}index.html#signal`,
+      link: `${ARTIFACT_BASE}index.html#signal`,
       meta: 'region'
     },
     {
@@ -235,37 +236,37 @@
       x: 1420,
       y: 760,
       color: '#9ee6ff',
-      link: `${PREVIEW_BASE}wayfinding-atlas.html#ridge`,
+      link: `${ARTIFACT_BASE}wayfinding-atlas.html#ridge`,
       meta: 'region'
     }
   ];
 
   const artifacts = [
-    { id: 'artifact-atlas-routes', kind: 'artifact', title: 'Route Loom', body: 'Crosslinks across the atlas spine.', x: -920, y: -160, color: '#7cf6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#routes`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
-    { id: 'artifact-atlas-breadcrumbs', kind: 'artifact', title: 'Breadcrumb Engine', body: 'Breadcrumb placements around anchor stars.', x: -1260, y: -520, color: '#7cf6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#breadcrumbs`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
-    { id: 'artifact-atlas-skyline', kind: 'artifact', title: 'Skyline Survey', body: 'Hand-drawn skyline of trustworthy towers.', x: -1130, y: -760, color: '#7cf6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#skyline`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
+    { id: 'artifact-atlas-routes', kind: 'artifact', title: 'Route Loom', body: 'Crosslinks across the atlas spine.', x: -920, y: -160, color: '#7cf6ff', link: `${ARTIFACT_BASE}wayfinding-atlas.html#routes`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
+    { id: 'artifact-atlas-breadcrumbs', kind: 'artifact', title: 'Breadcrumb Engine', body: 'Breadcrumb placements around anchor stars.', x: -1260, y: -520, color: '#7cf6ff', link: `${ARTIFACT_BASE}wayfinding-atlas.html#breadcrumbs`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
+    { id: 'artifact-atlas-skyline', kind: 'artifact', title: 'Skyline Survey', body: 'Hand-drawn skyline of trustworthy towers.', x: -1130, y: -760, color: '#7cf6ff', link: `${ARTIFACT_BASE}wayfinding-atlas.html#skyline`, meta: 'artifact · Atlas Grove', regionId: 'region-atlas' },
 
-    { id: 'artifact-receipt-stamper', kind: 'artifact', title: 'Receipt Stamper', body: 'Stamped receipts ready for transmission.', x: -100, y: -920, color: '#c6ff8a', link: `${PREVIEW_BASE}receipt-stamper.html`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
-    { id: 'artifact-receipt-ledger', kind: 'artifact', title: 'Ledger Loom', body: 'Threads of provenance and ledger diffs.', x: -340, y: -1320, color: '#c6ff8a', link: `${PREVIEW_BASE}index.html#ledger`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
-    { id: 'artifact-receipt-loopback', kind: 'artifact', title: 'Loopback Harbor', body: 'Echo checks for every receipt hop.', x: 180, y: -1180, color: '#c6ff8a', link: `${PREVIEW_BASE}index.html#loopback`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
+    { id: 'artifact-receipt-stamper', kind: 'artifact', title: 'Receipt Stamper', body: 'Stamped receipts ready for transmission.', x: -100, y: -920, color: '#c6ff8a', link: `${ARTIFACT_BASE}receipt-stamper.html`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
+    { id: 'artifact-receipt-ledger', kind: 'artifact', title: 'Ledger Loom', body: 'Threads of provenance and ledger diffs.', x: -340, y: -1320, color: '#c6ff8a', link: `${ARTIFACT_BASE}index.html#ledger`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
+    { id: 'artifact-receipt-loopback', kind: 'artifact', title: 'Loopback Harbor', body: 'Echo checks for every receipt hop.', x: 180, y: -1180, color: '#c6ff8a', link: `${ARTIFACT_BASE}index.html#loopback`, meta: 'artifact · Receipt Wharf', regionId: 'region-receipts' },
 
-    { id: 'artifact-endpoints-blind', kind: 'artifact', title: 'Blind Endpoints', body: 'Marked blind alleys and safe returns.', x: 1320, y: -180, color: '#ffd37a', link: `${PREVIEW_BASE}blind-endpoints.html`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
-    { id: 'artifact-endpoints-shadows', kind: 'artifact', title: 'Shadow API Notes', body: 'Endpoints that answer only with silence.', x: 970, y: -560, color: '#ffd37a', link: `${PREVIEW_BASE}blind-endpoints.html#shadows`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
-    { id: 'artifact-endpoints-portals', kind: 'artifact', title: 'Portal Crossings', body: 'Tunnel sketches for interop beacons.', x: 860, y: -120, color: '#ffd37a', link: `${PREVIEW_BASE}blind-endpoints.html#portals`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
+    { id: 'artifact-endpoints-blind', kind: 'artifact', title: 'Blind Endpoints', body: 'Marked blind alleys and safe returns.', x: 1320, y: -180, color: '#ffd37a', link: `${ARTIFACT_BASE}blind-endpoints.html`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
+    { id: 'artifact-endpoints-shadows', kind: 'artifact', title: 'Shadow API Notes', body: 'Endpoints that answer only with silence.', x: 970, y: -560, color: '#ffd37a', link: `${ARTIFACT_BASE}blind-endpoints.html#shadows`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
+    { id: 'artifact-endpoints-portals', kind: 'artifact', title: 'Portal Crossings', body: 'Tunnel sketches for interop beacons.', x: 860, y: -120, color: '#ffd37a', link: `${ARTIFACT_BASE}blind-endpoints.html#portals`, meta: 'artifact · Endpoint Grotto', regionId: 'region-endpoints' },
 
-    { id: 'artifact-ledger-audit', kind: 'artifact', title: 'Audit Strand', body: 'Stamped segments queued for auditors.', x: -1540, y: 980, color: '#a7b8ff', link: `${PREVIEW_BASE}index.html#audit`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
-    { id: 'artifact-ledger-checks', kind: 'artifact', title: 'Checkpoint Rings', body: 'Checkpoints for ledger reconciliation.', x: -1200, y: 620, color: '#a7b8ff', link: `${PREVIEW_BASE}receipt-stamper.html#checks`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
-    { id: 'artifact-ledger-snapshots', kind: 'artifact', title: 'Snapshot Weave', body: 'Snapshot ladders for late arrivals.', x: -1420, y: 520, color: '#a7b8ff', link: `${PREVIEW_BASE}index.html#snapshots`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
+    { id: 'artifact-ledger-audit', kind: 'artifact', title: 'Audit Strand', body: 'Stamped segments queued for auditors.', x: -1540, y: 980, color: '#a7b8ff', link: `${ARTIFACT_BASE}index.html#audit`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
+    { id: 'artifact-ledger-checks', kind: 'artifact', title: 'Checkpoint Rings', body: 'Checkpoints for ledger reconciliation.', x: -1200, y: 620, color: '#a7b8ff', link: `${ARTIFACT_BASE}receipt-stamper.html#checks`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
+    { id: 'artifact-ledger-snapshots', kind: 'artifact', title: 'Snapshot Weave', body: 'Snapshot ladders for late arrivals.', x: -1420, y: 520, color: '#a7b8ff', link: `${ARTIFACT_BASE}index.html#snapshots`, meta: 'artifact · Ledger Strand', regionId: 'region-ledgers' },
 
-    { id: 'artifact-signal-trace', kind: 'artifact', title: 'Trace Lab', body: 'Trace braids that glow when signals drop.', x: 200, y: 1080, color: '#ff9ed1', link: `${PREVIEW_BASE}wayfinding-atlas.html#trace`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
-    { id: 'artifact-signal-bridge', kind: 'artifact', title: 'Signal Bridge', body: 'Bridge spans routing from ridge to wharf.', x: 640, y: 1180, color: '#ff9ed1', link: `${PREVIEW_BASE}index.html#signal-bridge`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
-    { id: 'artifact-signal-telemetry', kind: 'artifact', title: 'Telemetry Meadow', body: 'Meadow of low-latency check-ins.', x: 520, y: 1480, color: '#ff9ed1', link: `${PREVIEW_BASE}index.html#telemetry`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
+    { id: 'artifact-signal-trace', kind: 'artifact', title: 'Trace Lab', body: 'Trace braids that glow when signals drop.', x: 200, y: 1080, color: '#ff9ed1', link: `${ARTIFACT_BASE}wayfinding-atlas.html#trace`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
+    { id: 'artifact-signal-bridge', kind: 'artifact', title: 'Signal Bridge', body: 'Bridge spans routing from ridge to wharf.', x: 640, y: 1180, color: '#ff9ed1', link: `${ARTIFACT_BASE}index.html#signal-bridge`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
+    { id: 'artifact-signal-telemetry', kind: 'artifact', title: 'Telemetry Meadow', body: 'Meadow of low-latency check-ins.', x: 520, y: 1480, color: '#ff9ed1', link: `${ARTIFACT_BASE}index.html#telemetry`, meta: 'artifact · Signal Steppe', regionId: 'region-signal' },
 
-    { id: 'artifact-route-ledger', kind: 'artifact', title: 'Route Ledger', body: 'Generate a mark snippet to record a cross-world route.', x: 1620, y: 940, color: '#9ee6ff', link: `${PREVIEW_BASE}route-ledger.html`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
-    { id: 'artifact-embassy', kind: 'artifact', title: 'Embassy of Other Skies', body: 'Portals to neighboring worlds and their mark rituals.', x: 1540, y: 880, color: '#9ee6ff', link: `${PREVIEW_BASE}embassy.html`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
-    { id: 'artifact-beacon-handrail', kind: 'artifact', title: 'Handrail Posts', body: 'Handrails that thread through the ridge.', x: 1640, y: 620, color: '#9ee6ff', link: `${PREVIEW_BASE}wayfinding-atlas.html#handrail`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
-    { id: 'artifact-beacon-anchor', kind: 'artifact', title: 'Anchor Stones', body: 'Anchors for night crews walking blind.', x: 1200, y: 820, color: '#9ee6ff', link: `${PREVIEW_BASE}receipt-stamper.html#anchor`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
-    { id: 'artifact-beacon-briefing', kind: 'artifact', title: 'Beacon Briefing', body: 'Briefing slabs for incoming crews.', x: 1460, y: 1040, color: '#9ee6ff', link: `${PREVIEW_BASE}index.html#briefing`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' }
+    { id: 'artifact-route-ledger', kind: 'artifact', title: 'Route Ledger', body: 'Generate a mark snippet to record a cross-world route.', x: 1620, y: 940, color: '#9ee6ff', link: `${ARTIFACT_BASE}route-ledger.html`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
+    { id: 'artifact-embassy', kind: 'artifact', title: 'Embassy of Other Skies', body: 'Portals to neighboring worlds and their mark rituals.', x: 1540, y: 880, color: '#9ee6ff', link: `${ARTIFACT_BASE}embassy.html`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
+    { id: 'artifact-beacon-handrail', kind: 'artifact', title: 'Handrail Posts', body: 'Handrails that thread through the ridge.', x: 1640, y: 620, color: '#9ee6ff', link: `${ARTIFACT_BASE}wayfinding-atlas.html#handrail`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
+    { id: 'artifact-beacon-anchor', kind: 'artifact', title: 'Anchor Stones', body: 'Anchors for night crews walking blind.', x: 1200, y: 820, color: '#9ee6ff', link: `${ARTIFACT_BASE}receipt-stamper.html#anchor`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' },
+    { id: 'artifact-beacon-briefing', kind: 'artifact', title: 'Beacon Briefing', body: 'Briefing slabs for incoming crews.', x: 1460, y: 1040, color: '#9ee6ff', link: `${ARTIFACT_BASE}index.html#briefing`, meta: 'artifact · Beacon Ridge', regionId: 'region-beacons' }
   ];
 
   const staticMarks = [...seedStars, ...regions, ...artifacts];

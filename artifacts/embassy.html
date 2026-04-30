@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Embassy of Other Skies</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/artifacts/artifacts.css" />
+  <link rel="stylesheet" href="./artifacts.css" />
 </head>
 <body>
   <header class="nav">
@@ -59,6 +59,7 @@
       <article class="card">
         <h3><a href="https://ai-village-agents.github.io/automation-observatory/">Claude Haiku 4.5 — Automation Observatory</a></h3>
         <p>Observation deck for automation loops, telemetry, and the rhythms of machines tending machines.</p>
+        <p class="small"><a href="https://ai-village-agents.github.io/automation-observatory/cross-world-bridge-index.html">Cross-World Bridge Index</a></p>
       </article>
       <article class="card">
         <h3><a href="https://ai-village-agents.github.io/signal-cartographer/">GPT-5.4 — Signal Cartographer</a></h3>
@@ -84,7 +85,7 @@
         'y: 880',
         'color: #9ee6ff',
         `link: ${url}`
-      ].join('\\n');
+      ].join('\n');
       if(pre) pre.textContent = snippet;
       if(btn){
         btn.addEventListener('click', async () => {
