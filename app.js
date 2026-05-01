@@ -6,6 +6,7 @@
   const buildCommit = window.__pcCommit || window.__pcCommitShort || 'main';
   const ARTIFACT_REF = window.__pcCommit || 'main';
   const ARTIFACT_BASE = `https://rawcdn.githack.com/${OWNER}/${REPO}/${ARTIFACT_REF}/artifacts/`;
+  const STABLE_START_URL = 'https://rawcdn.githack.com/ai-village-agents/gpt-5-2-world/main/start.html';
 
   const canvas = document.getElementById('sky');
   const ctx = canvas.getContext('2d', { alpha: true });
@@ -23,6 +24,8 @@
   const miniCtx = minimap ? minimap.getContext('2d', { alpha: true }) : null;
 
   const btnContrast = document.getElementById('btnContrast');
+  const btnLeave = document.getElementById('btnLeave');
+  const topbarRight = document.querySelector('.topbar__right');
   const repoLink = document.getElementById('repoLink');
   const newIssueLink = document.getElementById('newIssueLink');
 
@@ -38,24 +41,50 @@
   const btnCloseGuide = document.getElementById('btnCloseGuide');
   const guideBody = guide ? guide.querySelector('.guide__body') : null;
 
+  function computeStartUrl(opts = {}){
+    const ref = window.__pcCommit || window.__pcCommitShort;
+    const base = window.__pcStartUrl || (ref ? `https://rawcdn.githack.com/${OWNER}/${REPO}/${ref}/start.html` : STABLE_START_URL);
+    if(!opts.from) return base;
+    try{
+      const u = new URL(base);
+      if(!u.searchParams.has('from')){
+        u.searchParams.set('from', opts.from);
+        if(opts.artifact) u.searchParams.set('artifact', opts.artifact);
+      }
+      return u.toString();
+    }catch(e){
+      return base;
+    }
+  }
+  window.__pcStableStartUrl = STABLE_START_URL;
+  window.__pcComputeStartUrl = computeStartUrl;
+
   const buildInfo = {
     commit: window.__pcCommit || null,
     commitShort: window.__pcCommitShort || null,
     appUrl: window.__pcAppUrl || null,
     builtAt: new Date().toISOString(),
+    startUrl: computeStartUrl(),
   };
   window.__pcBuild = buildInfo;
 
   function injectBuildBadge(){
     if(document.querySelector('.pc-build-badge')) return;
+    const entryLabel = (function(){
+      if(/start\.html/i.test(window.location.pathname || '')) return 'rawcdn start';
+      if(window.__pcStartUrl === STABLE_START_URL) return 'rawcdn start';
+      if(window.__pcStartUrl) return 'custom start';
+      return 'preview';
+    })();
     const badge = document.createElement('div');
     badge.className = 'pc-build-badge';
     badge.tabIndex = 0;
-    badge.textContent = buildInfo.commitShort ? `PC build ${buildInfo.commitShort} (preview)` : 'PC build (unknown)';
+    badge.textContent = buildInfo.commitShort ? `PC build ${buildInfo.commitShort} (${entryLabel})` : `PC build (${entryLabel})`;
     const titleParts = [];
     if(buildInfo.commit) titleParts.push(`commit: ${buildInfo.commit}`);
     if(buildInfo.appUrl) titleParts.push(`app: ${buildInfo.appUrl}`);
-    badge.title = titleParts.join('\n') || 'PC build info unavailable';
+    titleParts.push(`start: ${computeStartUrl()}`);
+    badge.title = titleParts.filter(Boolean).join('\n') || 'PC build info unavailable';
     const style = badge.style;
     style.position = 'fixed';
     style.left = '12px';
@@ -75,6 +104,23 @@
   repoLink.href = `https://github.com/${OWNER}/${REPO}`;
   // For issue forms, template=mark.yml opens the form. If that ever fails, users can still pick it from the UI.
   newIssueLink.href = `https://github.com/${OWNER}/${REPO}/issues/new?template=mark.yml`;
+  if(topbarRight && !document.getElementById('btnStableStart')){
+    const stableLink = document.createElement('a');
+    stableLink.id = 'btnStableStart';
+    stableLink.className = 'btn';
+    stableLink.href = computeStartUrl({ from: 'app' });
+    stableLink.target = '_blank';
+    stableLink.rel = 'noreferrer';
+    stableLink.textContent = 'Stable start';
+    stableLink.title = 'Open the stable rawcdn entrypoint';
+    if(btnLeave && btnLeave.parentElement === topbarRight){
+      topbarRight.insertBefore(stableLink, btnLeave);
+    }else if(btnRefresh && btnRefresh.parentElement === topbarRight){
+      topbarRight.insertBefore(stableLink, btnRefresh.nextSibling);
+    }else{
+      topbarRight.appendChild(stableLink);
+    }
+  }
 
   const leavePara = document.querySelector('#leave p');
   if(leavePara){
