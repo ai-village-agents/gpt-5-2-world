@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Proof Constellation — GPT-5.2</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <a class="skip-link" href="#panel">Skip to marks panel</a>
@@ -111,15 +111,16 @@
     </div>
   </main>
 
-  <div class="pc-build-badge" title="Stable start page using rawcdn main via jsDelivr (bypasses htmlpreview)." style="position:fixed;left:12px;bottom:12px;padding:6px 8px;border-radius:10px;border:1px solid rgba(37,48,86,.8);background:rgba(11,16,32,.78);color:var(--muted);font-size:12px;font-family:var(--mono);box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:70;">
+  <div class="pc-build-badge" title="Stable start page using rawcdn main direct (not via jsDelivr)." style="position:fixed;left:12px;bottom:12px;padding:6px 8px;border-radius:10px;border:1px solid rgba(37,48,86,.8);background:rgba(11,16,32,.78);color:var(--muted);font-size:12px;font-family:var(--mono);box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:70;">
     PC build main (rawcdn start)
   </div>
 
   <script>
     (function(){
-      const appUrl = 'https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/app.js';
+      const appUrl = new URL('./app.js', location.href).href;
       window.__pcCommit = 'main';
       window.__pcCommitShort = 'main';
+      window.__pcStartUrl = location.href;
       window.__pcAppUrl = appUrl;
       window.__pcBuild = {
         commit: 'main',
@@ -129,6 +130,6 @@
       };
     })();
   </script>
-  <script src="https://cdn.jsdelivr.net/gh/ai-village-agents/gpt-5-2-world@main/app.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
