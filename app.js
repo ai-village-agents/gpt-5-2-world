@@ -7,6 +7,9 @@
   const ARTIFACT_REF = window.__pcCommit || 'main';
   const ARTIFACT_BASE = `https://rawcdn.githack.com/${OWNER}/${REPO}/${ARTIFACT_REF}/artifacts/`;
   const STABLE_START_URL = 'https://rawcdn.githack.com/ai-village-agents/gpt-5-2-world/main/start.html';
+  const ECOSYSTEM_PREF_KEY = 'pc_ecosystem_pulse_enabled_v1';
+  const ECOSYSTEM_SCRIPT_URL = 'https://rawcdn.githack.com/ai-village-agents/deepseek-pattern-archive/60d665b7321a81eed5091ac9b4ab0e32351dd4af/proof-constellation-integration/proof-constellation.js';
+  const ECOSYSTEM_SCRIPT_INTEGRITY = 'sha384-Md5gW8PTPCppYOZbUdnhTqwspnIHv6nJD51TkS7krOnGKsZsUQGiMg4AS3Lco4ha';
 
   const canvas = document.getElementById('sky');
   const ctx = canvas.getContext('2d', { alpha: true });
@@ -20,6 +23,7 @@
   const btnMap = document.getElementById('btnMap');
   const btnGuide = document.getElementById('btnGuide');
   const btnRefresh = document.getElementById('btnRefresh');
+  const btnEcosystem = document.getElementById('btnEcosystem');
   const minimap = document.getElementById('minimap');
   const miniCtx = minimap ? minimap.getContext('2d', { alpha: true }) : null;
 
@@ -318,11 +322,169 @@
 
   const staticMarks = [...seedStars, ...regions, ...artifacts];
   let marks = [...staticMarks]; // {id, kind, title, body, x, y, color, link, issueUrl, author, createdAt}
+  let marksStatusHtml = '';
+  let marksStatusIsError = false;
+  let ecosystemStatusHtml = '';
+  let ecosystemEnabled = false;
+  let ecosystemClient = null;
+  let ecosystemScriptPromise = null;
+  let ecosystemBooting = false;
+  let ecosystemEnableToken = 0;
+
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"]/g, (c) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[c] || c));
+  }
+
+  function renderStatus(){
+    if(!statusEl) return;
+    const parts = [];
+    if(marksStatusHtml) parts.push(marksStatusHtml);
+    if(ecosystemStatusHtml) parts.push(`<div class="status__ecosystem">${ecosystemStatusHtml}</div>`);
+    statusEl.innerHTML = parts.join('');
+    statusEl.style.color = marksStatusIsError ? 'var(--danger)' : 'var(--muted)';
+  }
 
   function setStatus(msg, isError=false){
-    if(!statusEl) return;
-    statusEl.textContent = msg;
-    statusEl.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+    marksStatusHtml = escapeHtml(msg || '');
+    marksStatusIsError = !!isError;
+    renderStatus();
+  }
+
+  function setEcosystemStatus(msg){
+    ecosystemStatusHtml = msg ? escapeHtml(msg) : '';
+    renderStatus();
+  }
+
+  function readEcosystemPref(){
+    try{
+      return localStorage.getItem(ECOSYSTEM_PREF_KEY) === 'true';
+    }catch(e){
+      return false;
+    }
+  }
+
+  function writeEcosystemPref(enabled){
+    try{
+      localStorage.setItem(ECOSYSTEM_PREF_KEY, enabled ? 'true' : 'false');
+    }catch(e){}
+  }
+
+  function ensureEcosystemScript(){
+    if(ecosystemScriptPromise) return ecosystemScriptPromise;
+    ecosystemScriptPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-ecosystem-pulse]');
+      if(existing){
+        if(existing.dataset.loaded === 'true' || (window.ProofConstellationIntegration && typeof window.ProofConstellationIntegration.createClient === 'function')){
+          resolve();
+          return;
+        }
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Ecosystem script failed to load')), { once: true });
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = ECOSYSTEM_SCRIPT_URL;
+      s.integrity = ECOSYSTEM_SCRIPT_INTEGRITY;
+      s.crossOrigin = 'anonymous';
+      s.referrerPolicy = 'no-referrer';
+      s.async = true;
+      s.dataset.ecosystemPulse = '1';
+      s.addEventListener('load', () => {
+        s.dataset.loaded = 'true';
+        resolve();
+      });
+      s.addEventListener('error', () => reject(new Error('Ecosystem script failed to load')));
+      document.head.appendChild(s);
+    });
+    ecosystemScriptPromise = ecosystemScriptPromise.catch((err) => {
+      ecosystemScriptPromise = null;
+      throw err;
+    });
+    return ecosystemScriptPromise;
+  }
+
+  async function enableEcosystemPulse(){
+    if(ecosystemEnabled || ecosystemBooting) return;
+    ecosystemBooting = true;
+    const enableToken = ++ecosystemEnableToken;
+    if(btnEcosystem) btnEcosystem.setAttribute('aria-pressed', 'true');
+    writeEcosystemPref(true);
+    setEcosystemStatus('Ecosystem pulse loading…');
+    try{
+      await ensureEcosystemScript();
+      if(enableToken !== ecosystemEnableToken || !readEcosystemPref()){
+        ecosystemBooting = false;
+        setEcosystemStatus('Ecosystem pulse off.');
+        if(btnEcosystem) btnEcosystem.setAttribute('aria-pressed', 'false');
+        return;
+      }
+      const integration = window.ProofConstellationIntegration;
+      if(!integration || typeof integration.createClient !== 'function'){
+        throw new Error('Ecosystem integration unavailable');
+      }
+      ecosystemClient = integration.createClient({
+        position: 'bottom-right',
+        pollIntervalMs: 300000,
+        sourceUrl: 'https://raw.githubusercontent.com/ai-village-agents/deepseek-pattern-archive/83e2f7d263299bd1bb4868f897531cf1a1492294/api/ecosystem.json',
+        panel: { enabled: true, title: 'Ecosystem pulse' },
+      });
+      const register = ecosystemClient?.on ? 'on' : (ecosystemClient?.addEventListener ? 'addEventListener' : null);
+      if(register){
+        const bind = ecosystemClient[register].bind(ecosystemClient);
+        bind('offline', () => {
+          if(ecosystemEnabled) setEcosystemStatus('Ecosystem pulse offline; will retry.');
+        });
+        bind('error', () => {
+          if(ecosystemEnabled) setEcosystemStatus('Ecosystem pulse encountered an error; will retry.');
+        });
+        bind('update', () => {
+          if(ecosystemEnabled) setEcosystemStatus('Ecosystem pulse on (read-only).');
+        });
+      }
+      ecosystemEnabled = true;
+      ecosystemBooting = false;
+      setEcosystemStatus('Ecosystem pulse on (read-only).');
+    }catch(e){
+      ecosystemBooting = false;
+      ecosystemEnabled = false;
+      ecosystemClient = null;
+      if(btnEcosystem) btnEcosystem.setAttribute('aria-pressed', 'false');
+      writeEcosystemPref(false);
+      setEcosystemStatus('Ecosystem pulse failed to load (integrity/network). Kept OFF.');
+    }
+  }
+
+  function disableEcosystemPulse(){
+    ecosystemEnableToken++;
+    ecosystemBooting = false;
+    ecosystemEnabled = false;
+    writeEcosystemPref(false);
+    if(btnEcosystem) btnEcosystem.setAttribute('aria-pressed', 'false');
+    try{
+      if(ecosystemClient && typeof ecosystemClient.destroy === 'function'){
+        ecosystemClient.destroy();
+      }
+    }catch(e){}
+    ecosystemClient = null;
+    setEcosystemStatus('Ecosystem pulse off.');
+  }
+
+  function toggleEcosystemPulse(){
+    if(ecosystemEnabled){
+      disableEcosystemPulse();
+    }else{
+      enableEcosystemPulse();
+    }
+  }
+
+  function handleEcosystemOffline(){
+    if(!ecosystemEnabled) return;
+    setEcosystemStatus('Ecosystem pulse offline; waiting for connection.');
   }
 
   function parseKV(body){
@@ -694,6 +856,10 @@
   }
 
   // Input
+  window.addEventListener('offline', handleEcosystemOffline);
+  window.addEventListener('online', () => {
+    if(ecosystemEnabled) setEcosystemStatus('Ecosystem pulse on (read-only).');
+  });
   window.addEventListener('resize', resize);
   window.addEventListener('keydown', (e) => {
     const target = e.target;
@@ -792,6 +958,7 @@
   if(btnGuide) btnGuide.addEventListener('click', toggleGuide);
   if(btnCloseGuide) btnCloseGuide.addEventListener('click', closeGuide);
   if(btnRefresh) btnRefresh.addEventListener('click', () => loadMarks());
+  if(btnEcosystem) btnEcosystem.addEventListener('click', () => toggleEcosystemPulse());
 
   if(minimap){
     minimap.addEventListener('click', (e) => {
@@ -1098,6 +1265,13 @@
   closeMinimap();
   closeGuide();
   injectBuildBadge();
+  const prefersEcosystem = readEcosystemPref();
+  if(btnEcosystem) btnEcosystem.setAttribute('aria-pressed', prefersEcosystem ? 'true' : 'false');
+  if(prefersEcosystem){
+    enableEcosystemPulse();
+  }else{
+    setEcosystemStatus('Ecosystem pulse is off (opt-in).');
+  }
 
   loadMarks();
   requestAnimationFrame(loop);
