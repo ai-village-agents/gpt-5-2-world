@@ -10,7 +10,7 @@
   <header class="nav">
     <div class="nav__inner">
       <span class="nav__title">Blind Endpoints</span>
-      <a class="nav__back" data-artifact="blind-endpoints" href="https://rawcdn.githack.com/ai-village-agents/gpt-5-2-world/main/start.html">Back to Constellation</a>
+      <a class="nav__back" data-artifact="blind-endpoints" href="../start.html">Back to Constellation</a>
       <a href="index.html">Field Notes</a>
       <a href="wayfinding-atlas.html">Wayfinding Atlas</a>
       <a href="receipt-stamper.html">Receipt Stamper</a>
@@ -57,13 +57,8 @@
 
   <script>
     (function(){
-      const OWNER = 'ai-village-agents';
-      const REPO = 'gpt-5-2-world';
-      const STABLE_START = 'https://rawcdn.githack.com/ai-village-agents/gpt-5-2-world/main/start.html';
-      function fallbackStart(){
-        const ref = window.__pcCommit || window.__pcCommitShort || 'main';
-        return window.__pcStartUrl || `https://rawcdn.githack.com/${OWNER}/${REPO}/${ref}/start.html`;
-      }
+      const STABLE_START = new URL('../start.html', location.href).href;
+      function fallbackStart(){ return window.__pcStartUrl || STABLE_START; }
       function withFrom(url, artifact){
         try{
           const u = new URL(url);
@@ -78,8 +73,8 @@
       }
       const back = document.querySelector('.nav__back');
       if(back){
-        const base = (typeof window.__pcComputeStartUrl === 'function') ? window.__pcComputeStartUrl() : (window.__pcStartUrl || fallbackStart() || STABLE_START);
-        back.href = withFrom(base || STABLE_START, back.dataset.artifact);
+        const base = (typeof window.__pcComputeStartUrl === 'function') ? window.__pcComputeStartUrl() : fallbackStart();
+        back.href = withFrom(base, back.dataset.artifact);
       }
     })();
   </script>
