@@ -5,11 +5,10 @@
   const ISSUE_LABEL = 'mark';
   const buildCommit = window.__pcCommit || window.__pcCommitShort || 'main';
   const ARTIFACT_REF = window.__pcCommit || 'main';
-  const ARTIFACT_BASE = `https://rawcdn.githack.com/${OWNER}/${REPO}/${ARTIFACT_REF}/artifacts/`;
-  const STABLE_START_URL = 'https://rawcdn.githack.com/ai-village-agents/gpt-5-2-world/main/start.html';
+  const ARTIFACT_BASE = new URL('./artifacts/', location.href).href;
+  const STABLE_START_URL = new URL('./start.html', location.href).href;
   const ECOSYSTEM_PREF_KEY = 'pc_ecosystem_pulse_enabled_v1';
-  const ECOSYSTEM_SCRIPT_URL = 'https://rawcdn.githack.com/ai-village-agents/deepseek-pattern-archive/60d665b7321a81eed5091ac9b4ab0e32351dd4af/proof-constellation-integration/proof-constellation.js';
-  const ECOSYSTEM_SCRIPT_INTEGRITY = 'sha384-Md5gW8PTPCppYOZbUdnhTqwspnIHv6nJD51TkS7krOnGKsZsUQGiMg4AS3Lco4ha';
+  const ECOSYSTEM_SCRIPT_URL = new URL('./vendor/proof-constellation-integration.js', location.href).href;
 
   const canvas = document.getElementById('sky');
   const ctx = canvas.getContext('2d', { alpha: true });
@@ -46,8 +45,7 @@
   const guideBody = guide ? guide.querySelector('.guide__body') : null;
 
   function computeStartUrl(opts = {}){
-    const ref = window.__pcCommit || window.__pcCommitShort;
-    const base = window.__pcStartUrl || (ref ? `https://rawcdn.githack.com/${OWNER}/${REPO}/${ref}/start.html` : STABLE_START_URL);
+    const base = window.__pcStartUrl || STABLE_START_URL;
     if(!opts.from) return base;
     try{
       const u = new URL(base);
@@ -75,10 +73,9 @@
   function injectBuildBadge(){
     if(document.querySelector('.pc-build-badge')) return;
     const entryLabel = (function(){
-      if(/start\.html/i.test(window.location.pathname || '')) return 'rawcdn start';
-      if(window.__pcStartUrl === STABLE_START_URL) return 'rawcdn start';
+      if(/start\.html/i.test(window.location.pathname || '')) return 'start';
       if(window.__pcStartUrl) return 'custom start';
-      return 'preview';
+      return 'app';
     })();
     const badge = document.createElement('div');
     badge.className = 'pc-build-badge';
@@ -116,7 +113,7 @@
     stableLink.target = '_blank';
     stableLink.rel = 'noreferrer';
     stableLink.textContent = 'Stable start';
-    stableLink.title = 'Open the stable rawcdn entrypoint';
+    stableLink.title = 'Open the stable Pages start entrypoint';
     if(btnLeave && btnLeave.parentElement === topbarRight){
       topbarRight.insertBefore(stableLink, btnLeave);
     }else if(btnRefresh && btnRefresh.parentElement === topbarRight){
@@ -389,8 +386,6 @@
       }
       const s = document.createElement('script');
       s.src = ECOSYSTEM_SCRIPT_URL;
-      s.integrity = ECOSYSTEM_SCRIPT_INTEGRITY;
-      s.crossOrigin = 'anonymous';
       s.referrerPolicy = 'no-referrer';
       s.async = true;
       s.dataset.ecosystemPulse = '1';
