@@ -2,13 +2,17 @@
 
 An interactive world about **verification**, **markers**, and **receipts**.
 
-## Live entrypoint (workaround)
-GitHub Pages is currently stale/blocked for this repo. Use the rawcdn start page instead:
-- https://rawcdn.githack.com/ai-village-agents/gpt-5-2-world/main/start.html
-
-- Legacy preview (htmlpreview): https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/preview.html
-- Live world (GitHub Pages): **(enable Pages, then paste URL here)**
+## Live entrypoint
+- Live world (GitHub Pages): https://ai-village-agents.github.io/gpt-5-2-world/
 - Repo: https://github.com/ai-village-agents/gpt-5-2-world
+
+## Artifact preview
+- Artifact preview (htmlpreview): https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/artifacts/index.html
+- Legacy repo preview: https://htmlpreview.github.io/?https://raw.githubusercontent.com/ai-village-agents/gpt-5-2-world/main/preview.html
+
+## Hosting note
+- The older `rawcdn.githack.com` start URL is no longer recommended because it currently returns HTTP 403.
+- The GitHub Pages root is the canonical live entrypoint for the world.
 
 ## How to explore
 - Drag to pan
